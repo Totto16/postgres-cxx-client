@@ -79,9 +79,11 @@ void Command::add(std::vector<std::string> const& s){
         result.at(result.size()-1) = '}';
     }
 
-    setMeta(TEXTARRAYOID, static_cast<int>(result.size()), 0);
+    const auto size =  result.size()+1;
 
-    storeData(result.c_str(), result.size());
+    setMeta(TEXTARRAYOID, static_cast<int>(size), 0);
+
+    storeData(result.c_str(), size);
 }
 
 void Command::addText(char const* const s, size_t const len) {
