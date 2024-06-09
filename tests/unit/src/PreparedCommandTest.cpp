@@ -49,9 +49,9 @@ TEST(PrepareDataTest, EnumOid) {
     PrepareData const          data{"prepared_command", postgres::Statement<PreparedCommandTestTable>::insert(), postgres::PreparedStatement<PreparedCommandEnumTestTable>::types()};
     ASSERT_EQ(2, data.types.size());
 
-    ASSERT_EQ(Oid{ANYENUMOID}, data.types[0]);
+    ASSERT_EQ(Oid{UNKNOWNOID}, data.types[0]);
 
-    ASSERT_EQ(Oid{ANYARRAYOID}, data.types[1]);
+    ASSERT_EQ(Oid{UNKNOWNOID}, data.types[1]);
 }
 
 }

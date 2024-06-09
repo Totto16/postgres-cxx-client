@@ -77,6 +77,17 @@ private:
     char const* type(std::chrono::system_clock::time_point*) {
         return "TIMESTAMP";
     }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, char const* > type(T*) {
+        return T::name;
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, char const* > type(std::vector<T>*) {
+        static auto const cache = std::string{T::name} + "[]";
+        return cache.c_str();
+    }
 };
 
 
@@ -139,12 +150,12 @@ private:
 
     template <typename T>
     std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(T*) {
-        return ANYENUMOID;
+        return UNKNOWNOID;
     }
 
     template <typename T>
     std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(std::vector<T>*) {
-        return ANYARRAYOID;
+        return UNKNOWNOID;
     }
 
 };
@@ -160,6 +171,47 @@ struct PlaceholdersCollector {
     int         idx = 0;
     std::string res{};
 };
+
+
+struct CastedPlaceholdersCollector {
+    template <typename T>
+    void accept(char const* const) {
+        res += res.empty() ? "$" : ",$";
+        res += std::to_string(++idx);
+
+        auto [casting_type, is_array]  = needs_casting(static_cast<T*>(nullptr));
+        if(casting_type != nullptr){
+            res+="::";
+            res+= casting_type;
+
+            if(is_array){
+                res += "[]";
+            }
+        }
+
+    }
+
+    int         idx = 0;
+    std::string res{};
+
+private:
+    template <typename T>
+    std::pair<const char*, bool> needs_casting(T*) {
+        if constexpr(std::is_base_of<postgres::Enum, T>::value){
+            return {T::name, false};
+        }
+
+        return {nullptr, false};
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, std::pair<const char*, bool>> needs_casting(std::vector<T>**) {
+        return {T::name, true};
+    }
+
+};
+
+
 
 struct AssignmentsCollector {
     template <typename T>

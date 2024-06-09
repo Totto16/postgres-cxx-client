@@ -103,15 +103,33 @@ struct RangeStatement {
 };
 
 
+
 template <typename T>
 struct PreparedStatement {
-   
-
-   static std::vector<Oid> types() {
-    auto collector = internal::TypesCollector{};
-    T::visitPostgresDefinition(collector);
-    return collector.types;
+    static std::vector<Oid> types() {
+        auto collector = internal::TypesCollector{};
+        T::visitPostgresDefinition(collector);
+        return collector.types;
     }
+
+    static std::string const& insert() {
+
+    static auto const cache = "INSERT INTO "
+                                  + Statement<T>::table()
+                                  + " ("
+                                  + Statement<T>::fields()
+                                  + ") VALUES ("
+                                  + castedPlaceholders()
+                                  + ")";
+        return cache;
+    }
+
+    static std::string castedPlaceholders(int const offset = 0) {
+        auto coll = internal::CastedPlaceholdersCollector{offset};
+        T::visitPostgresDefinition(coll);
+        return coll.res;
+    }
+
 };
 
 }  // namespace postgres

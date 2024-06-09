@@ -5,7 +5,21 @@
 #include <postgres/PrepareData.h>
 #include <postgres/Receiver.h>
 #include <postgres/Result.h>
+#include <postgres/Enum.h>
+#include <postgres/Visitable.h>
 #include "Samples.h"
+
+
+POSTGRES_CXX_ENUM(TestEnum, "test_enum");
+
+struct PreparedCommandEnumTestTable {
+    TestEnum e;
+    std::vector<TestEnum> vec;
+    int val;
+
+    POSTGRES_CXX_TABLE("prepared_enum_cmd_test", e, vec, val);
+};
+
 
 namespace postgres {
 
@@ -78,6 +92,26 @@ TEST(ConnectionTest, PrepareArgs) {
     ASSERT_TRUE(conn.exec(PreparedCommand{"select1", 1}).isOk());
     ASSERT_TRUE(conn.exec(PrepareData{"bad", "SELECT $1"}).isOk());
     ASSERT_THROW(conn.exec(PreparedCommand{"bad", 2}), RuntimeError);
+}
+
+TEST(ConnectionTest, PrepareArgsEnumInsert) {
+    Connection conn{};
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<PreparedCommandEnumTestTable>::table()}).isOk());
+    ASSERT_TRUE(conn.exec(Command{"DROP TYPE IF EXISTS test_enum"}).isOk());
+    ASSERT_TRUE(conn.exec(Command{R"(CREATE TYPE test_enum AS ENUM (
+	'test1',
+	'test2'
+    ))"}).isOk());
+    ASSERT_TRUE(conn.exec(Command{Statement<PreparedCommandEnumTestTable>::create()}).isOk());
+
+    ASSERT_TRUE(conn.exec(PrepareData{"enum_insert_1", PreparedStatement<PreparedCommandEnumTestTable>::insert(), PreparedStatement<PreparedCommandEnumTestTable>::types()}).isOk());
+
+    PreparedCommandEnumTestTable tbl{TestEnum{"test1"},{TestEnum{"test1"},TestEnum{"test2"}},21};
+    ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl}).isOk());
+
+    PreparedCommandEnumTestTable tbl2{TestEnum{"unknown_value"},{},2};
+    ASSERT_THROW(conn.exec(PreparedCommand{"enum_insert_1", tbl2}), RuntimeError);
 }
 
 TEST(ConnectionTest, ExecAsync) {

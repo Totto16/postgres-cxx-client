@@ -107,20 +107,15 @@ private:
 
     template <typename T>
     std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const std::vector<T> &args) {
-        std::string result = "ARRAY[";
+        std::string result = "{";
         if(args.empty()){
-            result = "ARRAY[]::";
-            result += T::name;
-            result += "[]";
+            result = "{}";
         }else{
             for(const auto& arg : args){
-                result+= "'" +arg.value + "',";
+                result+= arg.value + ",";
             }
 
-            result.at(result.size()-1) = ']';
-            result += "::";
-            result += T::name;
-            result += "[]";
+            result.at(result.size()-1) = '}';
         }
         
         const  auto size = result.size() + 1;

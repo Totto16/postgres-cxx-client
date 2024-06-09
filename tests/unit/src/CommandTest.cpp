@@ -244,7 +244,7 @@ TEST(CommandTest, StringVector) {
     ASSERT_EQ(1, cmd.count());
     ASSERT_EQ(Oid{TEXTARRAYOID}, cmd.types()[0]);
     ASSERT_STREQ("{'TEST1','TEST2'}", cmd.values()[0]);
-    ASSERT_EQ(17, cmd.lengths()[0]);
+    ASSERT_EQ(18, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 }
 
@@ -333,18 +333,14 @@ TEST(EnumCommandTest, Visit) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(2, cmd.count());
 
-    for(int i=0;i < cmd.count(); ++i){
-        std::cout << cmd.values()[i] << "\n";
-    }
-
     ASSERT_EQ(Oid{ANYENUMOID}, cmd.types()[0]);
     ASSERT_EQ(tbl.e.value, cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 
     ASSERT_EQ(Oid{ANYARRAYOID}, cmd.types()[1]);
-    ASSERT_STREQ("ARRAY['test1','test2']::test_enum[]", cmd.values()[1]);
-    ASSERT_EQ(36, cmd.lengths()[1]);
+    ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
+    ASSERT_EQ(14, cmd.lengths()[1]);
     ASSERT_EQ(0, cmd.formats()[1]);
 }
 
