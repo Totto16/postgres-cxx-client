@@ -101,11 +101,12 @@ private:
             if (std::is_same_v<T, bool>) {
                 return BOOLOID;
             }
+            using OidArray = Oid[];
             if (std::is_integral_v<T>) {
-                return ((Oid[]) {INT2OID, INT4OID, INT8OID})[LEN / 4];
+                return (OidArray{INT2OID, INT4OID, INT8OID})[LEN / 4];
             }
             if (std::is_floating_point_v<T>) {
-                return ((Oid[]) {UNKNOWNOID, FLOAT4OID, FLOAT8OID})[LEN / 4];
+                return (OidArray{UNKNOWNOID, FLOAT4OID, FLOAT8OID})[LEN / 4];
             }
             return UNKNOWNOID;
         }();
