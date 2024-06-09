@@ -2,7 +2,10 @@
 
 #include <string>
 #include <type_traits>
+#include <vector>
+
 #include <postgres/internal/Visitors.h>
+#include <postgres/Oid.h>
 
 namespace postgres {
 
@@ -96,6 +99,18 @@ struct RangeStatement {
             coll.res.clear();
         }
         return res;
+    }
+};
+
+
+template <typename T>
+struct PreparedStatement {
+   
+
+   static std::vector<Oid> types() {
+    auto collector = internal::TypesCollector{};
+    T::visitPostgresDefinition(collector);
+    return collector.types;
     }
 };
 
