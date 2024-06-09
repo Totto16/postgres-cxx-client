@@ -30,6 +30,12 @@ struct CommandEnumTestTable {
     POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
 };
 
+struct CommandStringVectorTestTable {
+    std::string e;
+    std::vector<std::string> vec;
+
+    POSTGRES_CXX_TABLE("string_vector_cmd_test", e, vec);
+};
 
 
 namespace postgres {
@@ -153,6 +159,23 @@ TEST(ConnectionTest, EnumInsertNormal) {
 
     ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandEnumTestTable>::table()}).isOk());
     ASSERT_TRUE(conn.exec(Command{std::string{"DROP TYPE IF EXISTS "} + TestEnum2::name}).isOk());
+}
+
+
+TEST(ConnectionTest, StringVectorInsert) {
+    Connection conn{};
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandStringVectorTestTable>::table()}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::create()}).isOk());
+
+    CommandStringVectorTestTable tbl{"test1",{"test1","test2"}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::insert(), tbl}).isOk());
+
+    CommandStringVectorTestTable tbl2{"test1",{}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::insert(), tbl2}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandStringVectorTestTable>::table()}).isOk());
 }
 
 

@@ -74,6 +74,10 @@ private:
         return "TEXT";
     }
 
+    char const* type(std::vector<std::string>*) {
+        return "TEXT[]";
+    }
+
     char const* type(std::chrono::system_clock::time_point*) {
         return "TIMESTAMP";
     }
