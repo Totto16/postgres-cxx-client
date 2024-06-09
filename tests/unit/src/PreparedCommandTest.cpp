@@ -6,6 +6,7 @@
 #include <postgres/Statement.h>
 #include <postgres/Visitable.h>
 #include <postgres/PrepareData.h>
+#include <postgres/Enum.h>
 #include "Samples.h"
 
 namespace postgres {
@@ -18,6 +19,15 @@ struct PreparedCommandTestTable {
     std::vector<std::string> vec ={};
 
     POSTGRES_CXX_TABLE("prepared_cmd_test", s, n, f, opt, vec);
+};
+
+POSTGRES_CXX_ENUM(TestEnum2, "test_enum2");
+
+struct PreparedCommandEnumTestTable {
+    TestEnum2 e;
+    std::vector<TestEnum2> vec;
+
+    POSTGRES_CXX_TABLE("prepared_enum_cmd_test", e,vec);
 };
 
 TEST(PrepareDataTest, Oid) {
@@ -33,6 +43,15 @@ TEST(PrepareDataTest, Oid) {
     ASSERT_EQ(Oid{INT4OID}, data.types[3]);
 
     ASSERT_EQ(Oid{TEXTARRAYOID}, data.types[4]);
+}
+
+TEST(PrepareDataTest, EnumOid) {
+    PrepareData const          data{"prepared_command", postgres::Statement<PreparedCommandTestTable>::insert(), postgres::PreparedStatement<PreparedCommandEnumTestTable>::types()};
+    ASSERT_EQ(2, data.types.size());
+
+    ASSERT_EQ(Oid{ANYENUMOID}, data.types[0]);
+
+    ASSERT_EQ(Oid{ANYARRAYOID}, data.types[1]);
 }
 
 }

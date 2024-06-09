@@ -7,6 +7,7 @@
 #include <optional>
 
 #include <postgres/Oid.h>
+#include <postgres/Enum.h>
 
 namespace postgres::internal {
 
@@ -132,9 +133,20 @@ private:
         return TIMESTAMPOID;
     }
 
-       template<typename T> Oid oid_of(std::optional<T>*) {
+    template<typename T> Oid oid_of(std::optional<T>*) {
         return oid_of(static_cast<T *>(nullptr));
     }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(T*) {
+        return ANYENUMOID;
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(std::vector<T>*) {
+        return ANYARRAYOID;
+    }
+
 };
 
 
