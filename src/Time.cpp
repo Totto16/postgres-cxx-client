@@ -67,7 +67,8 @@ Time::Time(std::string const& s) {
         days += isLeap(y) ? 366 : 365;
     }
     for (auto m = 1; m < months; ++m) {
-        days += ((int[]) {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31})[m - 1];
+        using IntArray = int[];
+        days += (IntArray{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31})[m - 1];
     }
     if (2 < months && isLeap(years)) {
         ++days;

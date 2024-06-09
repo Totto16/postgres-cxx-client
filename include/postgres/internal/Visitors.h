@@ -76,13 +76,13 @@ private:
 
 struct PlaceholdersCollector {
     template <typename T>
-    void accept(char const* const name) {
+    void accept(char const* const) {
         res += res.empty() ? "$" : ",$";
         res += std::to_string(++idx);
     }
 
     int         idx = 0;
-    std::string res;
+    std::string res{};
 };
 
 struct AssignmentsCollector {
@@ -97,7 +97,7 @@ struct AssignmentsCollector {
     }
 
     int         idx = 0;
-    std::string res;
+    std::string res{};
 };
 
 }  // namespace postgres::internal
