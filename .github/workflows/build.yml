@@ -95,7 +95,7 @@ jobs:
         if: matrix.config.os == 'macos'
         run: |
           brew update
-          brew install libpq postgresql@16 ninja
+          brew install libpq postgresql ninja
 
       - name: Configure
         run: cmake -DPOSTGRES_CXX_BUILD_EXAMPLES=ON -B./build/ -GNinja .
