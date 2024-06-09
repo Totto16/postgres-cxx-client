@@ -27,12 +27,19 @@ add_library(PostgresCxxClient
         src/Visitable.cpp
         src/Visitors.cpp
         src/Worker.cpp
-        )
+)
 
 add_library(PostgresCxxClient::PostgresCxxClient ALIAS PostgresCxxClient)
 
 # Requirements.
 target_compile_features(PostgresCxxClient PUBLIC cxx_std_17)
+
+# Set warnings
+if(MSVC)
+        target_compile_options(PostgresCxxClient PRIVATE /W4 /WX)
+else()
+        target_compile_options(PostgresCxxClient PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
 
 # Dependencies.
 find_package(PostgreSQL REQUIRED)
@@ -42,12 +49,12 @@ target_include_directories(PostgresCxxClient
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
         ${PostgreSQL_INCLUDE_DIRS}
-        )
+)
 
 target_link_libraries(PostgresCxxClient
         PUBLIC
         ${PostgreSQL_LIBRARIES}
-        )
+)
 
 # Installation.
 include(CMakePackageConfigHelpers)
@@ -55,7 +62,7 @@ include(CMakePackageConfigHelpers)
 write_basic_package_version_file(PostgresCxxClientConfigVersion.cmake
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion
-        )
+)
 
 install(TARGETS PostgresCxxClient
         EXPORT PostgresCxxClientTargets
@@ -63,35 +70,35 @@ install(TARGETS PostgresCxxClient
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
-        )
+)
 
 install(EXPORT PostgresCxxClientTargets
         FILE PostgresCxxClientTargets.cmake
         NAMESPACE PostgresCxxClient::
         DESTINATION lib/cmake/PostgresCxxClient
-        )
+)
 
 install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/PostgresCxxClientConfigVersion.cmake"
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PostgresCxxClientConfig.cmake"
         DESTINATION lib/cmake/PostgresCxxClient
-        )
+)
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/postgres"
         DESTINATION include
-        )
+)
 
 # Subprojects.
 option(POSTGRES_CXX_BUILD_EXAMPLES "Build examples" OFF)
 option(POSTGRES_CXX_BUILD_TESTS "Build tests" OFF)
 
-if (POSTGRES_CXX_BUILD_EXAMPLES)
-    enable_testing()
-    add_subdirectory(examples)
-endif ()
+if(POSTGRES_CXX_BUILD_EXAMPLES)
+        enable_testing()
+        add_subdirectory(examples)
+endif()
 
-if (POSTGRES_CXX_BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(deps/googletest)
-    add_subdirectory(tests/unit)
-endif ()
+if(POSTGRES_CXX_BUILD_TESTS)
+        enable_testing()
+        add_subdirectory(deps/googletest)
+        add_subdirectory(tests/unit)
+endif()
