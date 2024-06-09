@@ -334,7 +334,7 @@ using postgres::Error;
 void execMultiBad(Connection& conn) {
     try {
         conn.exec("SELECT 1; SELECT 2");
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -445,7 +445,7 @@ void resultNull(Connection& conn) {
     std::string s;
     try {
         fld >> s;
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 
     // Ok.
@@ -477,7 +477,7 @@ void resultBadCast(Connection& conn) {
 
         // Underflow.
         fld.as<uint64_t>();
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -514,7 +514,7 @@ void resultExtractEpoch(Connection& conn) {
     // Nope!
     try {
         fld.as<std::chrono::system_clock::time_point>();
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 
     // Ok.
@@ -595,7 +595,7 @@ void sendTWice(Connection& conn) {
     // Error!
     try {
         auto rec2 = conn.send("SELECT 2");
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -716,7 +716,7 @@ struct Generator {
 
     // Called by visitPostgresFields.
     template <typename T>
-    void accept(char const* column_name, T const& value) {
+    void accept(char const* column_name, T const&) {
         std::cout << column_name << std::endl;
     }
 };
