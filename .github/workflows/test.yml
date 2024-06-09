@@ -1,0 +1,48 @@
+name: Test CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Run Tests 
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Clang
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 18
+          sudo apt-get install libc++-18* libc++abi*18* llvm-18 -y
+          echo "CC=clang-18" >> "$GITHUB_ENV"
+          echo "CXX=clang++-18" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build cmake libpq-dev -y
+
+      - name: Configure
+        run: cmake -DPOSTGRES_CXX_BUILD_TESTS=ON -B./build/ -H.
+
+      - name: Build
+        run: cmake --build ./build/
+
+      - name: Setup PostgreSQL
+        uses: ikalnytskyi/action-setup-postgres@v6 
+        with:
+          username: cxx_client
+          password: cxx_client
+          database: cxx_client
+        id: postgres
+
+      - name: Run tests
+        run: PGUSER=cxx_client PGPASSWORD=cxx_client PGDATABASE=cxx_client PGHOST=localhost PGPORT=5432 ./build/tests/unit/PostgresCxxClientTest -V

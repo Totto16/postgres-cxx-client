@@ -1,0 +1,104 @@
+name: Build CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}-${{ matrix.config.os-version }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Windows MSVC
+            os: windows
+            os-version: 2022
+
+          - name: Linux GCC
+            os: ubuntu
+            os-version: 24.04
+            use-clang: false
+
+          - name: Linux Clang
+            os: ubuntu
+            os-version: 24.04
+            use-clang: true
+
+          - name: MacOS 
+            os: macos
+            os-version: 13
+            arm: false
+
+
+          - name: MacOS (Arm64)
+            os: macos
+            os-version: 14
+            arm: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+
+      - name: Setup MSVC (Windows)
+        if: matrix.config.os == 'windows'
+        uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+
+      - name: Setup Clang (Linux)
+        if: matrix.config.os == 'ubuntu' && matrix.config.use-clang == true
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 18
+          sudo apt-get install libc++-18* libc++abi*18* -y
+          echo "CC=clang-18" >> "$GITHUB_ENV"
+          echo "CXX=clang++-18" >> "$GITHUB_ENV"
+          echo "OBJC=clang-18" >> "$GITHUB_ENV"
+
+      - name: Setup GCC (Linux)
+        if: matrix.config.os == 'ubuntu' && matrix.config.use-clang == false
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 14
+          platform: x64
+
+      - name: Setup Clang (MacOS)
+        if: matrix.config.os == 'macos'
+        run: |
+          brew update
+          brew install llvm@18
+          echo "$(brew --prefix)/opt/llvm/bin" >> $GITHUB_PATH
+          echo "LDFLAGS=-L$(brew --prefix)/opt/llvm/lib -L$(brew --prefix)/opt/llvm/lib/c++ -Wl,-rpath,$(brew --prefix)/opt/llvm/lib/c++" >> "$GITHUB_ENV"
+          echo "CPPFLAGS=-I$(brew --prefix)/opt/llvm/include" >> "$GITHUB_ENV"
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
+          echo "OBJC=clang" >> "$GITHUB_ENV"
+          echo "CC_LD=lld" >> "$GITHUB_ENV"
+          echo "CXX_LD=lld" >> "$GITHUB_ENV"
+          echo "OBJC_LD=lld" >> "$GITHUB_ENV"
+  
+
+      - name: Install dependencies (Linux)
+        if: matrix.config.os == 'ubuntu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build cmake libpq-dev -y
+
+      - name: Install dependencies (MacOS)
+        if: matrix.config.os == 'macos'
+        run: |
+          brew update
+          brew install libpq postgresql
+
+      - name: Configure
+        run: cmake -DPOSTGRES_CXX_BUILD_EXAMPLES=ON -B./build/ .
+
+      - name: Build
+        run: cmake --build ./build/
