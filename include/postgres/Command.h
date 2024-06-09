@@ -97,7 +97,7 @@ private:
         auto constexpr LEN = sizeof(arg);
         static_assert(LEN <= 8, "Unexpected arithmetic argument type length");
 
-        auto constexpr ID = []() -> Oid {
+        auto constexpr ID = [&]() -> Oid {
             if (std::is_same_v<T, bool>) {
                 return BOOLOID;
             }
