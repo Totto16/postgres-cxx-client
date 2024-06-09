@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Oid.h"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -9,6 +10,7 @@
 #include <postgres/internal/Bytes.h>
 #include <postgres/internal/Classifier.h>
 #include <postgres/Oid.h>
+#include <postgres/Enum.h>
 #include <postgres/Time.h>
 
 namespace postgres {
@@ -83,7 +85,7 @@ private:
     }
 
     template <typename T>
-    void add(std::optional<T>& arg) {
+    void add(std::optional<T> const& arg) {
         arg.has_value() ? add(arg.value()) : add(nullptr);
     }
 
@@ -92,20 +94,52 @@ private:
         arg ? add(*arg) : add(nullptr);
     }
 
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const T &arg) {
+        const auto &value = arg.value;
+        const  auto size = value.size() + 1;
+        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
+
+
+        storeData(value.c_str(), size);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const std::vector<T> &args) {
+        std::string result = "{";
+        if(args.empty()){
+            result = "{}";
+        }else{
+            for(const auto& arg : args){
+                result+= arg.value + ",";
+            }
+
+            result.at(result.size()-1) = '}';
+        }
+        
+        const  auto size = result.size() + 1;
+
+        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
+
+        storeData(result.c_str(), size);
+    }
+
     template <typename T>
     std::enable_if_t<std::is_arithmetic_v<T>> add(T arg) {
         auto constexpr LEN = sizeof(arg);
         static_assert(LEN <= 8, "Unexpected arithmetic argument type length");
 
-        auto constexpr ID = []() -> Oid {
+        auto constexpr ID = [&]() -> Oid {
             if (std::is_same_v<T, bool>) {
                 return BOOLOID;
             }
+            using OidArray = Oid[];
             if (std::is_integral_v<T>) {
-                return ((Oid[]) {INT2OID, INT4OID, INT8OID})[LEN / 4];
+                return (OidArray{INT2OID, INT4OID, INT8OID})[LEN / 4];
             }
             if (std::is_floating_point_v<T>) {
-                return ((Oid[]) {UNKNOWNOID, FLOAT4OID, FLOAT8OID})[LEN / 4];
+                return (OidArray{UNKNOWNOID, FLOAT4OID, FLOAT8OID})[LEN / 4];
             }
             return UNKNOWNOID;
         }();
@@ -122,6 +156,7 @@ private:
     void add(std::string const& s);
     void add(std::string_view s);
     void add(char const* s);
+    void add(std::vector<std::string> const& s);
     void addText(char const* s, size_t len);
     void setMeta(Oid id, int len, int fmt);
     void storeData(void const* arg, size_t len);

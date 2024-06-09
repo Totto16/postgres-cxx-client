@@ -324,6 +324,21 @@ void prepare(Connection& conn) {
 /// but Postgres complains that the prepared statement doesn't exist,
 /// then setting `pool_mode=session` in pgbouncer.ini is likely to solve the problem.
 
+/// If you use a table like `MyTable` you can get the OID types by using this builtin helper
+/// ```cpp
+using postgres::PreparedCommand;
+using postgres::PrepareData;
+using postgres::Statement;
+using postgres::PreparedStatement;
+
+void prepare_table(Connection& conn) {
+    MyTable table{2, "prepared"};
+    conn.exec(PrepareData{"my_table_prepared_insert", Statement<MyTable>::insert(), PreparedStatement<MyTable>::types()});
+    conn.exec(PreparedCommand{"my_table_prepared_insert", table});
+}
+/// ```
+
+
 /// ### Multiple Statements in One
 ///
 /// The `exec()` method described earlier allows to execute only one statement at a time,
@@ -334,7 +349,7 @@ using postgres::Error;
 void execMultiBad(Connection& conn) {
     try {
         conn.exec("SELECT 1; SELECT 2");
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -445,7 +460,7 @@ void resultNull(Connection& conn) {
     std::string s;
     try {
         fld >> s;
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 
     // Ok.
@@ -477,7 +492,7 @@ void resultBadCast(Connection& conn) {
 
         // Underflow.
         fld.as<uint64_t>();
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -514,7 +529,7 @@ void resultExtractEpoch(Connection& conn) {
     // Nope!
     try {
         fld.as<std::chrono::system_clock::time_point>();
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 
     // Ok.
@@ -595,7 +610,7 @@ void sendTWice(Connection& conn) {
     // Error!
     try {
         auto rec2 = conn.send("SELECT 2");
-    } catch (Error const& err) {
+    } catch (Error const&) {
     }
 }
 /// ```
@@ -716,7 +731,7 @@ struct Generator {
 
     // Called by visitPostgresFields.
     template <typename T>
-    void accept(char const* column_name, T const& value) {
+    void accept(char const* column_name, T const&) {
         std::cout << column_name << std::endl;
     }
 };

@@ -5,7 +5,38 @@
 #include <postgres/PrepareData.h>
 #include <postgres/Receiver.h>
 #include <postgres/Result.h>
+#include <postgres/Enum.h>
+#include <postgres/Visitable.h>
 #include "Samples.h"
+
+
+POSTGRES_CXX_ENUM(TestEnum, "test_enum");
+
+struct PreparedCommandEnumTestTable {
+    TestEnum e;
+    std::vector<TestEnum> vec;
+    int val;
+
+    POSTGRES_CXX_TABLE("prepared_enum_cmd_test", e, vec, val);
+};
+
+
+POSTGRES_CXX_ENUM(TestEnum2, "test_enum2");
+
+struct CommandEnumTestTable {
+    TestEnum2 e;
+    std::vector<TestEnum2> vec;
+
+    POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
+};
+
+struct CommandStringVectorTestTable {
+    std::string e;
+    std::vector<std::string> vec;
+
+    POSTGRES_CXX_TABLE("string_vector_cmd_test", e, vec);
+};
+
 
 namespace postgres {
 
@@ -79,6 +110,74 @@ TEST(ConnectionTest, PrepareArgs) {
     ASSERT_TRUE(conn.exec(PrepareData{"bad", "SELECT $1"}).isOk());
     ASSERT_THROW(conn.exec(PreparedCommand{"bad", 2}), RuntimeError);
 }
+
+TEST(ConnectionTest, PrepareArgsEnumInsert) {
+    Connection conn{};
+
+    ASSERT_TRUE(conn.exec(Command{std::string{"DROP TABLE IF EXISTS "} + Statement<PreparedCommandEnumTestTable>::table()}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"DROP TYPE IF EXISTS "} + TestEnum::name}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"CREATE TYPE "} + TestEnum::name + R"( AS ENUM (
+	'test1',
+	'test2'
+    ))"}).isOk());
+    ASSERT_TRUE(conn.exec(Command{Statement<PreparedCommandEnumTestTable>::create()}).isOk());
+
+    ASSERT_TRUE(conn.exec(PrepareData{"enum_insert_1", PreparedStatement<PreparedCommandEnumTestTable>::insert(), PreparedStatement<PreparedCommandEnumTestTable>::types()}).isOk());
+
+    PreparedCommandEnumTestTable tbl{TestEnum{"test1"},{TestEnum{"test1"},TestEnum{"test2"}},21};
+    ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl}).isOk());
+
+    PreparedCommandEnumTestTable tbl2{TestEnum{"unknown_value"},{},2};
+    ASSERT_THROW(conn.exec(PreparedCommand{"enum_insert_1", tbl2}), RuntimeError);
+
+    PreparedCommandEnumTestTable tbl3{TestEnum{"test1"},{},13};
+    ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl3}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<PreparedCommandEnumTestTable>::table()}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"DROP TYPE IF EXISTS "} + TestEnum::name}).isOk());
+}
+
+TEST(ConnectionTest, EnumInsertNormal) {
+    Connection conn{};
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandEnumTestTable>::table()}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"DROP TYPE IF EXISTS "} + TestEnum2::name}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"CREATE TYPE "} + TestEnum2::name + R"( AS ENUM (
+	'test1',
+	'test2'
+    ))"}).isOk());
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandEnumTestTable>::create()}).isOk());
+
+    CommandEnumTestTable tbl{TestEnum2{"test1"},{TestEnum2{"test1"},TestEnum2{"test2"}}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl}).isOk());
+
+    CommandEnumTestTable tbl2{TestEnum2{"unknown_value"},{}};
+    ASSERT_THROW(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl2}), RuntimeError);
+
+    CommandEnumTestTable tbl3{TestEnum2{"test1"},{}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl3}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandEnumTestTable>::table()}).isOk());
+    ASSERT_TRUE(conn.exec(Command{std::string{"DROP TYPE IF EXISTS "} + TestEnum2::name}).isOk());
+}
+
+
+TEST(ConnectionTest, StringVectorInsert) {
+    Connection conn{};
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandStringVectorTestTable>::table()}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::create()}).isOk());
+
+    CommandStringVectorTestTable tbl{"test1",{"test1","test2"}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::insert(), tbl}).isOk());
+
+    CommandStringVectorTestTable tbl2{"test1",{}};
+    ASSERT_TRUE(conn.exec(Command{Statement<CommandStringVectorTestTable>::insert(), tbl2}).isOk());
+
+    ASSERT_TRUE(conn.exec(Command{"DROP TABLE IF EXISTS " + Statement<CommandStringVectorTestTable>::table()}).isOk());
+}
+
 
 TEST(ConnectionTest, ExecAsync) {
     Connection conn{};

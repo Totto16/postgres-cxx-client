@@ -1,8 +1,10 @@
 #include <vector>
+#include <optional>
 #include <gtest/gtest.h>
 #include <postgres/internal/Bytes.h>
 #include <postgres/Command.h>
 #include <postgres/Visitable.h>
+#include <postgres/Enum.h>
 #include "Samples.h"
 
 namespace postgres {
@@ -13,6 +15,14 @@ struct CommandTestTable {
     double      f = 0.0;
 
     POSTGRES_CXX_TABLE("cmd_test", s, n, f);
+};
+
+POSTGRES_CXX_ENUM(TestEnum, "test_enum");
+struct EnumCommandTestTable {
+    TestEnum e;
+    std::vector<TestEnum> vec;
+
+    POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
 };
 
 TEST(CommandTest, Stmt) {
@@ -160,11 +170,33 @@ TEST(CommandTest, NullOpt) {
     ASSERT_EQ(0, cmd.formats()[0]);
 }
 
+TEST(CommandTest, StringNullOpt) {
+    std::optional<std::string> opt{};
+    Command const          cmd{"STMT", opt};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{0}, cmd.types()[0]);
+    ASSERT_EQ(nullptr, cmd.values()[0]);
+    ASSERT_EQ(0, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
+TEST(CommandTest, StringOpt) {
+    std::optional<std::string> opt{"TEST"};
+    Command const          cmd{"STMT", opt};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
+    ASSERT_STREQ("TEST", cmd.values()[0]);
+    ASSERT_EQ(5, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
 TEST(CommandTest, EmptyStr) {
     Command const cmd{"STMT", ""};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("", cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -175,7 +207,7 @@ TEST(CommandTest, CStr) {
     Command const cmd{"STMT", str};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str, cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -187,7 +219,7 @@ TEST(CommandTest, StrView) {
     Command const          cmd{"STMT", view};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str.data(), cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -198,10 +230,21 @@ TEST(CommandTest, Str) {
     Command const     cmd{"STMT", str};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("STR", cmd.values()[0]);
     ASSERT_NE(str.data(), cmd.values()[0]);
     ASSERT_EQ(4, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
+TEST(CommandTest, StringVector) {
+    std::vector<std::string> vec{"TEST1","TEST2"};
+    Command const          cmd{"STMT", vec};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{TEXTARRAYOID}, cmd.types()[0]);
+    ASSERT_STREQ("{'TEST1','TEST2'}", cmd.values()[0]);
+    ASSERT_EQ(18, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 }
 
@@ -266,7 +309,7 @@ TEST(CommandTest, Visit) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(3, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(tbl.s, cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -282,12 +325,31 @@ TEST(CommandTest, Visit) {
     ASSERT_EQ(1, cmd.formats()[2]);
 }
 
+
+TEST(EnumCommandTest, Visit) {
+    EnumCommandTestTable const tbl{TestEnum{"test"}, {TestEnum{"test1"}, 
+    TestEnum{"test2"}}};
+    Command const          cmd{"STMT", tbl};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(2, cmd.count());
+
+    ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[0]);
+    ASSERT_EQ(tbl.e.value, cmd.values()[0]);
+    ASSERT_EQ(5, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+
+    ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[1]);
+    ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
+    ASSERT_EQ(14, cmd.lengths()[1]);
+    ASSERT_EQ(0, cmd.formats()[1]);
+}
+
 TEST(CommandTest, MultiArgs) {
     Command const cmd{"STMT", std::string{"TEXT"}, int32_t{3}, 4.56};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(3, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("TEXT", cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -310,12 +372,12 @@ TEST(CommandTest, Dynamic) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(2, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str, cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 
-    ASSERT_EQ(0u, cmd.types()[1]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[1]);
     ASSERT_STREQ("STR2", cmd.values()[1]);
     ASSERT_EQ(5, cmd.lengths()[1]);
     ASSERT_EQ(0, cmd.formats()[1]);

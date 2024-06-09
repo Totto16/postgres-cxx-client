@@ -6,6 +6,7 @@
 #include <postgres/Connection.h>
 #include <postgres/Consumer.h>
 #include <postgres/Context.h>
+#include <postgres/Enum.h>
 #include <postgres/Error.h>
 #include <postgres/Field.h>
 #include <postgres/Oid.h>

@@ -67,7 +67,8 @@ Time::Time(std::string const& s) {
         days += isLeap(y) ? 366 : 365;
     }
     for (auto m = 1; m < months; ++m) {
-        days += ((int[]) {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31})[m - 1];
+        using IntArray = int[];
+        days += (IntArray{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31})[m - 1];
     }
     if (2 < months && isLeap(years)) {
         ++days;
@@ -102,6 +103,43 @@ time_t Time::toPostgres() const {
     return std::chrono::duration_cast<microseconds>(pnt_ - EPOCH).count();
 }
 
+//from gtest: src/gtest.cc:3663
+static bool PortableLocaltimeImpl(time_t* timer, struct tm* out) {
+#if defined(_MSC_VER)
+    return localtime_s(out, timer) == 0;
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+    // MINGW <time.h> provides neither localtime_r nor localtime_s, but uses
+    // Windows' localtime(), which has a thread-local tm buffer.
+    struct tm* tm_ptr = localtime(timer);  // NOLINT
+    if (tm_ptr == nullptr){
+        return false;
+    }
+    *out = *tm_ptr;
+    return true;
+#else
+    return localtime_r(timer, out) != nullptr;
+#endif
+}
+
+static struct tm* PortableLocaltime(time_t* timer, struct tm* out) {
+    if(PortableLocaltimeImpl(timer, out)){
+        return out;
+    }
+    return nullptr;
+}
+
+
+static struct tm* portableGmtime( const time_t* timer, struct tm* out ){
+#if defined(_MSC_VER)
+    if(gmtime_s(out, timer) ==0){
+        return out;
+    } 
+    return nullptr;
+#else
+    return gmtime_r(timer, out);
+#endif
+}
+
 std::string Time::toString() const {
     std::string res(64, 0);
     auto const  dur   = pnt_.time_since_epoch();
@@ -114,12 +152,12 @@ std::string Time::toString() const {
         res.resize(strftime(&res[0],
                             res.size(),
                             nanos.count() ? "%FT%T.000000000 %z" : "%FT%T %z",
-                            localtime_r(&uni, &parts)));
+                            PortableLocaltime(&uni, &parts)));
     } else {
         res.resize(strftime(&res[0],
                             res.size(),
                             nanos.count() ? "%FT%T.000000000" : "%FT%T",
-                            gmtime_r(&uni, &parts)));
+                            portableGmtime(&uni, &parts)));
     }
 
     //  00000000001111111111222222222233333
