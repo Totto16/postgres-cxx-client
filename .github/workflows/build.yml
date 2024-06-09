@@ -98,7 +98,7 @@ jobs:
           brew install libpq postgresql
 
       - name: Configure
-        run: cmake -DPOSTGRES_CXX_BUILD_EXAMPLES=ON -B./build/ .
+        run: cmake -DPOSTGRES_CXX_BUILD_EXAMPLES=ON -B./build/ -GNinja .
 
       - name: Build
         run: cmake --build ./build/
