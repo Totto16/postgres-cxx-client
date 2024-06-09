@@ -4,6 +4,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <optional>
 
 #include <postgres/Oid.h>
 
@@ -125,6 +126,10 @@ private:
 
     Oid oid_of(std::chrono::system_clock::time_point*) {
         return TIMESTAMPOID;
+    }
+
+       template<typename T> Oid oid_of(std::optional<T>*) {
+        return oid_of(static_cast<T *>(nullptr));
     }
 };
 

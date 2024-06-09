@@ -10,6 +10,7 @@ add_executable(PostgresCxxClientTest
         src/DispatcherTest.cpp
         src/FieldTest.cpp
         src/main.cpp
+        src/PreparedCommandTest.cpp
         src/ReceiverTest.cpp
         src/ResultTest.cpp
         src/RowTest.cpp
