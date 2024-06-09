@@ -4,6 +4,7 @@
 #include <postgres/internal/Bytes.h>
 #include <postgres/Command.h>
 #include <postgres/Visitable.h>
+#include <postgres/Enum.h>
 #include "Samples.h"
 
 namespace postgres {
@@ -14,6 +15,14 @@ struct CommandTestTable {
     double      f = 0.0;
 
     POSTGRES_CXX_TABLE("cmd_test", s, n, f);
+};
+
+POSTGRES_CXX_ENUM(TestEnum, "test_enum");
+struct EnumCommandTestTable {
+    TestEnum e;
+    std::vector<TestEnum> vec;
+
+    POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
 };
 
 TEST(CommandTest, Stmt) {
@@ -314,6 +323,29 @@ TEST(CommandTest, Visit) {
     ASSERT_NEAR(4.56, internal::orderBytes<double>(cmd.values()[2]), 0.001);
     ASSERT_EQ(8, cmd.lengths()[2]);
     ASSERT_EQ(1, cmd.formats()[2]);
+}
+
+
+TEST(EnumCommandTest, Visit) {
+    EnumCommandTestTable const tbl{TestEnum{"test"}, {TestEnum{"test1"}, 
+    TestEnum{"test2"}}};
+    Command const          cmd{"STMT", tbl};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(2, cmd.count());
+
+    for(int i=0;i < cmd.count(); ++i){
+        std::cout << cmd.values()[i] << "\n";
+    }
+
+    ASSERT_EQ(Oid{ANYENUMOID}, cmd.types()[0]);
+    ASSERT_EQ(tbl.e.value, cmd.values()[0]);
+    ASSERT_EQ(5, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+
+    ASSERT_EQ(Oid{ANYARRAYOID}, cmd.types()[1]);
+    ASSERT_STREQ("ARRAY['test1','test2']::test_enum[]", cmd.values()[1]);
+    ASSERT_EQ(36, cmd.lengths()[1]);
+    ASSERT_EQ(0, cmd.formats()[1]);
 }
 
 TEST(CommandTest, MultiArgs) {

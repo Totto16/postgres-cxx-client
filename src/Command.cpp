@@ -70,7 +70,7 @@ void Command::add(char const* const s) {
 void Command::add(std::vector<std::string> const& s){
     std::string result = "{";
     if(s.empty()){
-        result =" {}";
+        result = "{}";
     }else{
         for(const auto& value : s){
             result+= "'" +value + "',";

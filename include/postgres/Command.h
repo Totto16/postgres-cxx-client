@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Oid.h"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -9,6 +10,7 @@
 #include <postgres/internal/Bytes.h>
 #include <postgres/internal/Classifier.h>
 #include <postgres/Oid.h>
+#include <postgres/Enum.h>
 #include <postgres/Time.h>
 
 namespace postgres {
@@ -90,6 +92,42 @@ private:
     template <typename T>
     void add(T const* const arg) {
         arg ? add(*arg) : add(nullptr);
+    }
+
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const T &arg) {
+        const auto &value = arg.value;
+        const  auto size = value.size() + 1;
+        setMeta(ANYENUMOID, static_cast<int>(size), 0);
+
+
+        storeData(value.c_str(), size);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const std::vector<T> &args) {
+        std::string result = "ARRAY[";
+        if(args.empty()){
+            result = "ARRAY[]::";
+            result += T::name;
+            result += "[]";
+        }else{
+            for(const auto& arg : args){
+                result+= "'" +arg.value + "',";
+            }
+
+            result.at(result.size()-1) = ']';
+            result += "::";
+            result += T::name;
+            result += "[]";
+        }
+        
+        const  auto size = result.size() + 1;
+
+        setMeta(ANYARRAYOID, static_cast<int>(size), 0);
+
+        storeData(result.c_str(), size);
     }
 
     template <typename T>
