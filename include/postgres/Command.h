@@ -99,7 +99,7 @@ private:
     std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const T &arg) {
         const auto &value = arg.value;
         const  auto size = value.size() + 1;
-        setMeta(ANYENUMOID, static_cast<int>(size), 0);
+        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
 
 
         storeData(value.c_str(), size);
@@ -120,7 +120,7 @@ private:
         
         const  auto size = result.size() + 1;
 
-        setMeta(ANYARRAYOID, static_cast<int>(size), 0);
+        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
 
         storeData(result.c_str(), size);
     }

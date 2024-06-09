@@ -333,12 +333,12 @@ TEST(EnumCommandTest, Visit) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(2, cmd.count());
 
-    ASSERT_EQ(Oid{ANYENUMOID}, cmd.types()[0]);
+    ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[0]);
     ASSERT_EQ(tbl.e.value, cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 
-    ASSERT_EQ(Oid{ANYARRAYOID}, cmd.types()[1]);
+    ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[1]);
     ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
     ASSERT_EQ(14, cmd.lengths()[1]);
     ASSERT_EQ(0, cmd.formats()[1]);
