@@ -228,6 +228,17 @@ TEST(CommandTest, Str) {
     ASSERT_EQ(0, cmd.formats()[0]);
 }
 
+TEST(CommandTest, StringVector) {
+    std::vector<std::string> vec{"TEST1","TEST2"};
+    Command const          cmd{"STMT", vec};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{TEXTARRAYOID}, cmd.types()[0]);
+    ASSERT_STREQ("{'TEST1','TEST2'}", cmd.values()[0]);
+    ASSERT_EQ(17, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
 TEST(CommandTest, Oid) {
     std::string   str  = "STR";
     auto const    data = str.data();

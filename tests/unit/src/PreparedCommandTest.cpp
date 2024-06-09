@@ -15,22 +15,24 @@ struct PreparedCommandTestTable {
     int32_t     n = 0;
     double      f = 0.0;
     std::optional<int> opt = std::nullopt;
+    std::vector<std::string> vec ={};
 
-    POSTGRES_CXX_TABLE("prepared_cmd_test", s, n, f, opt);
+    POSTGRES_CXX_TABLE("prepared_cmd_test", s, n, f, opt, vec);
 };
 
 TEST(PrepareDataTest, Oid) {
     PrepareData const          data{"prepared_command", postgres::Statement<PreparedCommandTestTable>::insert(), postgres::PreparedStatement<PreparedCommandTestTable>::types()};
-    ASSERT_EQ(4, data.types.size());
+    ASSERT_EQ(5, data.types.size());
 
     ASSERT_EQ(Oid{TEXTOID}, data.types[0]);
 
     ASSERT_EQ(Oid{INT4OID}, data.types[1]);
 
     ASSERT_EQ(Oid{FLOAT8OID}, data.types[2]);
-   
+
     ASSERT_EQ(Oid{INT4OID}, data.types[3]);
 
+    ASSERT_EQ(Oid{TEXTARRAYOID}, data.types[4]);
 }
 
 }

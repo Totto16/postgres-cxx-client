@@ -123,6 +123,7 @@ private:
     void add(std::string const& s);
     void add(std::string_view s);
     void add(char const* s);
+    void add(std::vector<std::string> const& s);
     void addText(char const* s, size_t len);
     void setMeta(Oid id, int len, int fmt);
     void storeData(void const* arg, size_t len);

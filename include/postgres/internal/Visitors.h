@@ -124,6 +124,10 @@ private:
         return TEXTOID;
     }
 
+    Oid oid_of(std::vector<std::string>*) {
+        return TEXTARRAYOID;
+    }
+
     Oid oid_of(std::chrono::system_clock::time_point*) {
         return TIMESTAMPOID;
     }

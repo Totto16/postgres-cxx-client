@@ -66,6 +66,24 @@ void Command::add(char const* const s) {
     values_.push_back(s);
 }
 
+//TODO: this isn't really safe, but add(std::string) isn't either
+void Command::add(std::vector<std::string> const& s){
+    std::string result = "{";
+    if(s.empty()){
+        result =" {}";
+    }else{
+        for(const auto& value : s){
+            result+= "'" +value + "',";
+        }
+
+        result.at(result.size()-1) = '}';
+    }
+
+    setMeta(TEXTARRAYOID, static_cast<int>(result.size()), 0);
+
+    storeData(result.c_str(), result.size());
+}
+
 void Command::addText(char const* const s, size_t const len) {
     setMeta(TEXTOID, static_cast<int>(len), 0);
     storeData(s, len);
