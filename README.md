@@ -15,26 +15,28 @@ Features:
 
 ## Table of Contents
 
-* [Getting Started](#getting-started)
-  * [CMake Subproject](#cmake-subproject)
-  * [Prebuilt Library](#prebuilt-library)
-  * [Running the Tests](#running-the-tests)
-* [License](#license)
-* [Usage](#usage)
-  * [Get Started with a Connection](#get-started-with-a-connection)
-  * [Get Started with a Connection Pool](#get-started-with-a-connection-pool)
-  * [What To Include](#what-to-include)
-  * [Configuring](#configuring)
-  * [Error Handling](#error-handling)
-  * [Statement Execution](#statement-execution)
-  * [Prepared Statements](#prepared-statements)
-  * [Multiple Statements in One](#multiple-statements-in-one)
-  * [Transactions](#transactions)
-  * [Reading the Result](#reading-the-result)
-  * [Escaping](#escaping)
-  * [Asynchronous Interface](#asynchronous-interface)
-  * [Generating Statements](#generating-statements)
-  * [Connection Pool](#connection-pool)
+- [PgCC (Postgres C++ Client)](#pgcc-postgres-c-client)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [CMake Subproject](#cmake-subproject)
+    - [Prebuilt Library](#prebuilt-library)
+    - [Running the Tests](#running-the-tests)
+  - [License](#license)
+  - [Usage](#usage)
+    - [Get Started with a Connection](#get-started-with-a-connection)
+    - [Get Started with a Connection Pool](#get-started-with-a-connection-pool)
+    - [What To Include](#what-to-include)
+    - [Configuring](#configuring)
+    - [Error Handling](#error-handling)
+    - [Statement Execution](#statement-execution)
+    - [Prepared Statements](#prepared-statements)
+    - [Multiple Statements in One](#multiple-statements-in-one)
+    - [Transactions](#transactions)
+    - [Reading the Result](#reading-the-result)
+    - [Escaping](#escaping)
+    - [Asynchronous Interface](#asynchronous-interface)
+    - [Generating Statements](#generating-statements)
+    - [Connection Pool](#connection-pool)
 
 <a name="getting-started"/>
 
@@ -511,6 +513,20 @@ Also using PgBouncer can lead to errors depending on its configuration:
 if you're certain you've successfully prepared a statement and your code is correct,
 but Postgres complains that the prepared statement doesn't exist,
 then setting `pool_mode=session` in pgbouncer.ini is likely to solve the problem.
+
+If you use a table like `MyTable` you can get the OID types by using this builtin helper
+```cpp
+using postgres::PreparedCommand;
+using postgres::PrepareData;
+using postgres::Statement;
+using postgres::PreparedStatement;
+
+void prepare_table(Connection& conn) {
+    MyTable table{2, "prepared"};
+    conn.exec(PrepareData{"my_table_prepared_insert", Statement<MyTable>::insert(), PreparedStatement<MyTable>::types()});
+    conn.exec(PreparedCommand{"my_table_prepared_insert", table});
+}
+```
 
 <a name="multiple-statements-in-one"/>
 

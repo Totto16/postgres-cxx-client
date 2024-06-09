@@ -324,6 +324,21 @@ void prepare(Connection& conn) {
 /// but Postgres complains that the prepared statement doesn't exist,
 /// then setting `pool_mode=session` in pgbouncer.ini is likely to solve the problem.
 
+/// If you use a table like `MyTable` you can get the OID types by using this builtin helper
+/// ```cpp
+using postgres::PreparedCommand;
+using postgres::PrepareData;
+using postgres::Statement;
+using postgres::PreparedStatement;
+
+void prepare_table(Connection& conn) {
+    MyTable table{2, "prepared"};
+    conn.exec(PrepareData{"my_table_prepared_insert", Statement<MyTable>::insert(), PreparedStatement<MyTable>::types()});
+    conn.exec(PreparedCommand{"my_table_prepared_insert", table});
+}
+/// ```
+
+
 /// ### Multiple Statements in One
 ///
 /// The `exec()` method described earlier allows to execute only one statement at a time,
