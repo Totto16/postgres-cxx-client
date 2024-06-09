@@ -83,7 +83,7 @@ private:
     }
 
     template <typename T>
-    void add(std::optional<T>& arg) {
+    void add(std::optional<T> const& arg) {
         arg.has_value() ? add(arg.value()) : add(nullptr);
     }
 

@@ -1,4 +1,5 @@
 #include <vector>
+#include <optional>
 #include <gtest/gtest.h>
 #include <postgres/internal/Bytes.h>
 #include <postgres/Command.h>
@@ -11,8 +12,9 @@ struct CommandTestTable {
     std::string s;
     int32_t     n = 0;
     double      f = 0.0;
+    std::optional<std::string> str= std::nullopt;
 
-    POSTGRES_CXX_TABLE("cmd_test", s, n, f);
+    POSTGRES_CXX_TABLE("cmd_test", s, n, f, str);
 };
 
 TEST(CommandTest, Stmt) {
@@ -264,7 +266,7 @@ TEST(CommandTest, Visit) {
     CommandTestTable const tbl{"TEXT", 3, 4.56};
     Command const          cmd{"STMT", tbl};
     ASSERT_STREQ("STMT", cmd.statement());
-    ASSERT_EQ(3, cmd.count());
+    ASSERT_EQ(4, cmd.count());
 
     ASSERT_EQ(0u, cmd.types()[0]);
     ASSERT_EQ(tbl.s, cmd.values()[0]);
@@ -280,6 +282,11 @@ TEST(CommandTest, Visit) {
     ASSERT_NEAR(4.56, internal::orderBytes<double>(cmd.values()[2]), 0.001);
     ASSERT_EQ(8, cmd.lengths()[2]);
     ASSERT_EQ(1, cmd.formats()[2]);
+
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[3]);
+    ASSERT_EQ(nullptr, cmd.values()[3]);
+    ASSERT_EQ(8, cmd.lengths()[3]);
+    ASSERT_EQ(1, cmd.formats()[3]);
 }
 
 TEST(CommandTest, MultiArgs) {
