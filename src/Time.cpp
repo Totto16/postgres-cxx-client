@@ -131,7 +131,10 @@ static struct tm* PortableLocaltime(time_t* timer, struct tm* out) {
 
 static struct tm* portableGmtime( const time_t* timer, struct tm* out ){
 #if defined(_MSC_VER)
-    return gmtime_s(out, timer) ;
+    if(gmtime_s(out, timer) ==0){
+        return out;
+    } 
+    return nullptr;
 #else
     return gmtime_r(timer, out);
 #endif
