@@ -12,9 +12,8 @@ struct CommandTestTable {
     std::string s;
     int32_t     n = 0;
     double      f = 0.0;
-    std::optional<std::string> str= std::nullopt;
 
-    POSTGRES_CXX_TABLE("cmd_test", s, n, f, str);
+    POSTGRES_CXX_TABLE("cmd_test", s, n, f);
 };
 
 TEST(CommandTest, Stmt) {
@@ -162,11 +161,33 @@ TEST(CommandTest, NullOpt) {
     ASSERT_EQ(0, cmd.formats()[0]);
 }
 
+TEST(CommandTest, StringNullOpt) {
+    std::optional<std::string> opt{};
+    Command const          cmd{"STMT", opt};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{0}, cmd.types()[0]);
+    ASSERT_EQ(nullptr, cmd.values()[0]);
+    ASSERT_EQ(0, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
+TEST(CommandTest, StringOpt) {
+    std::optional<std::string> opt{"TEST"};
+    Command const          cmd{"STMT", opt};
+    ASSERT_STREQ("STMT", cmd.statement());
+    ASSERT_EQ(1, cmd.count());
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
+    ASSERT_STREQ("TEST", cmd.values()[0]);
+    ASSERT_EQ(5, cmd.lengths()[0]);
+    ASSERT_EQ(0, cmd.formats()[0]);
+}
+
 TEST(CommandTest, EmptyStr) {
     Command const cmd{"STMT", ""};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("", cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -177,7 +198,7 @@ TEST(CommandTest, CStr) {
     Command const cmd{"STMT", str};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str, cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -189,7 +210,7 @@ TEST(CommandTest, StrView) {
     Command const          cmd{"STMT", view};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str.data(), cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -200,7 +221,7 @@ TEST(CommandTest, Str) {
     Command const     cmd{"STMT", str};
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(1, cmd.count());
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("STR", cmd.values()[0]);
     ASSERT_NE(str.data(), cmd.values()[0]);
     ASSERT_EQ(4, cmd.lengths()[0]);
@@ -266,9 +287,9 @@ TEST(CommandTest, Visit) {
     CommandTestTable const tbl{"TEXT", 3, 4.56};
     Command const          cmd{"STMT", tbl};
     ASSERT_STREQ("STMT", cmd.statement());
-    ASSERT_EQ(4, cmd.count());
+    ASSERT_EQ(3, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(tbl.s, cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -282,11 +303,6 @@ TEST(CommandTest, Visit) {
     ASSERT_NEAR(4.56, internal::orderBytes<double>(cmd.values()[2]), 0.001);
     ASSERT_EQ(8, cmd.lengths()[2]);
     ASSERT_EQ(1, cmd.formats()[2]);
-
-    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[3]);
-    ASSERT_EQ(nullptr, cmd.values()[3]);
-    ASSERT_EQ(8, cmd.lengths()[3]);
-    ASSERT_EQ(1, cmd.formats()[3]);
 }
 
 TEST(CommandTest, MultiArgs) {
@@ -294,7 +310,7 @@ TEST(CommandTest, MultiArgs) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(3, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_STREQ("TEXT", cmd.values()[0]);
     ASSERT_EQ(5, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
@@ -317,12 +333,12 @@ TEST(CommandTest, Dynamic) {
     ASSERT_STREQ("STMT", cmd.statement());
     ASSERT_EQ(2, cmd.count());
 
-    ASSERT_EQ(0u, cmd.types()[0]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[0]);
     ASSERT_EQ(str, cmd.values()[0]);
     ASSERT_EQ(0, cmd.lengths()[0]);
     ASSERT_EQ(0, cmd.formats()[0]);
 
-    ASSERT_EQ(0u, cmd.types()[1]);
+    ASSERT_EQ(Oid{TEXTOID}, cmd.types()[1]);
     ASSERT_STREQ("STR2", cmd.values()[1]);
     ASSERT_EQ(5, cmd.lengths()[1]);
     ASSERT_EQ(0, cmd.formats()[1]);

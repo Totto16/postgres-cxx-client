@@ -62,12 +62,12 @@ void Command::add(std::string_view const s) {
 }
 
 void Command::add(char const* const s) {
-    setMeta(0, 0, 0);
+    setMeta(TEXTOID, 0, 0);
     values_.push_back(s);
 }
 
 void Command::addText(char const* const s, size_t const len) {
-    setMeta(0, static_cast<int>(len), 0);
+    setMeta(TEXTOID, static_cast<int>(len), 0);
     storeData(s, len);
 }
 
