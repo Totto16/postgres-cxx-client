@@ -36,7 +36,7 @@ target_compile_features(PostgresCxxClient PUBLIC cxx_std_17)
 
 # Set warnings
 if(MSVC)
-        target_compile_options(PostgresCxxClient PRIVATE /W4 /WX)
+        target_compile_options(PostgresCxxClient PRIVATE /W3 /WX)
 else()
         target_compile_options(PostgresCxxClient PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
