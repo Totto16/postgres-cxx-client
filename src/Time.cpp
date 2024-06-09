@@ -129,6 +129,14 @@ static struct tm* PortableLocaltime(time_t* timer, struct tm* out) {
 }
 
 
+static struct tm* portableGmtime( const time_t* timer, struct tm* out ){
+#if defined(_MSC_VER)
+    return gmtime_s(out, timer) ;
+#else
+    return gmtime_r(timer, out);
+#endif
+}
+
 std::string Time::toString() const {
     std::string res(64, 0);
     auto const  dur   = pnt_.time_since_epoch();
@@ -146,7 +154,7 @@ std::string Time::toString() const {
         res.resize(strftime(&res[0],
                             res.size(),
                             nanos.count() ? "%FT%T.000000000" : "%FT%T",
-                            gmtime_r(&uni, &parts)));
+                            portableGmtime(&uni, &parts)));
     }
 
     //  00000000001111111111222222222233333
