@@ -3,7 +3,8 @@
 #include <utility>
 #include <libpq-fe.h>
 
-// Taken from /usr/include/postgresql/16/server/catalog/pg_type_d.h.
+// Taken from /usr/include/postgresql/18/server/catalog/pg_type_d.h
+
 #define BOOLOID 16
 #define BYTEAOID 17
 #define CHAROID 18
