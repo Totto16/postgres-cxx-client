@@ -1,0 +1,6 @@
+*
+.wraplock
+!packagefiles
+!packagefiles/**
+!*.wrap
+!.gitignore
