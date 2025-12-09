@@ -1,0 +1,18 @@
+option(
+    'examples',
+    type: 'boolean',
+    value: false,
+    description: 'Build examples',
+)
+option(
+    'tests',
+    type: 'boolean',
+    value: false,
+    description: 'Build tests',
+)
+option(
+    'postgres_version_range',
+    type: 'string',
+    value: '',
+    description: 'Constrict the version of postgres',
+)
