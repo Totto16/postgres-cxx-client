@@ -1,16 +1,16 @@
-version: "3"
-
 services:
-  postgres:
-    environment:
-      POSTGRES_USER: cxx_client
-      POSTGRES_PASSWORD: cxx_client
-      POSTGRES_DB: cxx_client
-    image: postgres
-  test:
-    environment:
-      PGHOST: postgres
-      PGUSER: cxx_client
-      PGPASSWORD: cxx_client
-      PGDATABASE: cxx_client
-    image: anatoliifrolov/pgcxxtest
+    test_db:
+        container_name: test_database_db
+        image: postgres:16
+        environment:
+            POSTGRES_DB: cxx_client
+            POSTGRES_USER: cxx_client
+            POSTGRES_PASSWORD: cxx_client
+        healthcheck:
+            test: ["CMD", "pg_isready", "-q", "-d", "postgres", "-U", "cxx_client"]
+            timeout: 5s
+            interval: 30s
+            retries: 3
+        ports:
+            - "5556:5432"
+
