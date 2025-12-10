@@ -85,7 +85,7 @@ TEST(FieldTest, Time) {
 }
 
 TEST(FieldTest, TimeBad) {
-    ASSERT_THROW(Connection{}.exec("SELECT '2017-08-25 13:03:35'")[0][0].as<Time>().toUnix(),
+    ASSERT_THROW(auto _ = Connection{}.exec("SELECT '2017-08-25 13:03:35'")[0][0].as<Time>().toUnix(),
                  LogicError);
 }
 

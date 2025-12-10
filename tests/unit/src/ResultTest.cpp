@@ -32,8 +32,8 @@ TEST(ResultTest, Empty) {
 
 TEST(ResultTest, Valid) {
     Connection conn{};
-    ASSERT_NO_THROW(conn.exec("SELECT 1"));
-    ASSERT_THROW(conn.exec("BAD"), RuntimeError);
+    ASSERT_NO_THROW(auto _ = conn.exec("SELECT 1"));
+    ASSERT_THROW(auto _ = conn.exec("BAD"), RuntimeError);
 }
 
 TEST(ResultTest, Range) {

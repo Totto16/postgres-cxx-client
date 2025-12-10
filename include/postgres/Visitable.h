@@ -662,6 +662,9 @@
     static auto constexpr _POSTGRES_CXX_VISITABLE = true; \
     static auto constexpr _POSTGRES_CXX_TABLE_NAME = name; \
     template <typename V> \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wvariadic-macros\"")\
+    _Pragma("GCC diagnostic ignored \"-Wvariadic-macro-arguments-omitted\"")\
     static void visitPostgresDefinition(V& visitor) { \
         _POSTGRES_CXX_VISIT(_POSTGRES_CXX_ACCEPT_DEF, __VA_ARGS__) \
     } \
@@ -672,5 +675,6 @@
     template <typename V> \
     void visitPostgresFields(V& visitor) { \
         _POSTGRES_CXX_VISIT(_POSTGRES_CXX_ACCEPT_FLD, __VA_ARGS__) \
-    }
+    } \
+    _Pragma("GCC diagnostic pop")
 

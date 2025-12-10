@@ -23,7 +23,7 @@ Context::~Context() noexcept = default;
 Connection Context::connect() const {
     auto conn = uri_.empty() ? Connection{cfg_} : Connection{uri_};
     for (auto const& prep : preparings_) {
-        conn.exec(prep);
+        auto _ign = conn.exec(prep);
     }
     return conn;
 }

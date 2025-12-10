@@ -16,7 +16,7 @@ Transaction::Transaction(Transaction&& other) noexcept
 
 Transaction::~Transaction() noexcept {
     if (conn_) {
-        conn_->exec("ROLLBACK");
+        auto _ign = conn_->exec("ROLLBACK");
     }
 }
 

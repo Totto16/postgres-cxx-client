@@ -20,12 +20,12 @@ TEST(ReceiverTest, Ok) {
     ASSERT_FALSE(res.isOk());
     ASSERT_TRUE(res.isEmpty());
     ASSERT_TRUE(res.isDone());
-    ASSERT_THROW(res.begin(), LogicError);
+    ASSERT_THROW(auto _ = res.begin(), LogicError);
 }
 
 TEST(ReceiverTest, Bad) {
     auto rec = Connection{}.send("BAD");
-    ASSERT_THROW(rec.receive(), RuntimeError);
+    ASSERT_THROW(auto _ = rec.receive(), RuntimeError);
 
     auto res = rec.receive();
     ASSERT_FALSE(res.isOk());
@@ -48,7 +48,7 @@ TEST(ReceiverTest, Raw) {
 
 TEST(ReceiverTest, RawBad) {
     auto cons = Connection{}.sendRaw("BAD");
-    ASSERT_THROW(cons.consume(), RuntimeError);
+    ASSERT_THROW(auto _ = cons.consume(), RuntimeError);
 
     auto stat = cons.consume();
     ASSERT_FALSE(stat.isOk());
@@ -58,7 +58,7 @@ TEST(ReceiverTest, RawBad) {
 
 TEST(ReceiverTest, Prepare) {
     Connection conn{};
-    auto       rec = conn.send(PrepareData{"select1", "SELECT 1"});
+    auto       rec = conn.send(PrepareData{"select1", "SELECT 1",{}});
     auto       res = rec.receive();
     ASSERT_TRUE(res.isOk());
     ASSERT_TRUE(res.isEmpty());
@@ -83,8 +83,8 @@ TEST(ReceiverTest, Prepare) {
 
 TEST(ReceiverTest, PrepareBad) {
     Connection conn{};
-    auto       rec = conn.send(PrepareData{"select1", "BAD"});
-    ASSERT_THROW(rec.receive(), RuntimeError);
+    auto       rec = conn.send(PrepareData{"select1", "BAD", {}});
+    ASSERT_THROW(auto _ = rec.receive(), RuntimeError);
 
     auto res = rec.receive();
     ASSERT_FALSE(res.isOk());
@@ -92,7 +92,7 @@ TEST(ReceiverTest, PrepareBad) {
     ASSERT_TRUE(res.isDone());
 
     rec = conn.send(PreparedCommand{"select1"});
-    ASSERT_THROW(rec.receive(), RuntimeError);
+    ASSERT_THROW(auto _ = rec.receive(), RuntimeError);
 
     res = rec.receive();
     ASSERT_FALSE(res.isOk());
@@ -139,7 +139,7 @@ TEST(ReceiverTest, Busy) {
 
 TEST(ReceiverTest, Cleanup) {
     Connection conn{};
-    conn.send("SELECT 1::INT");
+    auto _ = conn.send("SELECT 1::INT");
     auto rec = conn.send("SELECT 2::INT");
     ASSERT_EQ(2, rec.receive()[0][0].as<int32_t>());
     ASSERT_TRUE(rec.receive().isDone());
@@ -148,7 +148,7 @@ TEST(ReceiverTest, Cleanup) {
 TEST(ReceiverTest, Mix) {
     Connection conn{};
     auto       rec1 = conn.send("SELECT 1::INT");
-    ASSERT_THROW(conn.send("SELECT 2::INT"), RuntimeError);
+    ASSERT_THROW(auto _ = conn.send("SELECT 2::INT"), RuntimeError);
     ASSERT_EQ(1, rec1.receive()[0][0].as<int32_t>());
     ASSERT_TRUE(rec1.receive().isDone());
 }

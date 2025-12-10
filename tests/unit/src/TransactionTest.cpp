@@ -11,33 +11,33 @@ inline auto constexpr SELECT = "SELECT val FROM tx_test";
 
 TEST(TransactionTest, Ok) {
     Connection conn{};
-    conn.exec(CREATE);
-    conn.transact(INSERT, INSERT);
+    auto _ = conn.exec(CREATE);
+    auto _2 = conn.transact(INSERT, INSERT);
     ASSERT_EQ(2, conn.exec(SELECT).size());
 }
 
 TEST(TransactionTest, Bad) {
     Connection conn{};
-    conn.exec(CREATE);
-    ASSERT_THROW(conn.transact(INSERT, "BAD"), RuntimeError);
+    auto _ = conn.exec(CREATE);
+    ASSERT_THROW(auto _ = conn.transact(INSERT, "BAD"), RuntimeError);
     ASSERT_EQ(0, conn.exec(SELECT).size());
 }
 
 TEST(TransactionTest, Commit) {
     Connection conn{};
-    conn.exec(CREATE);
+    auto _ = conn.exec(CREATE);
     auto tx = conn.begin();
-    conn.exec(INSERT);
-    tx.commit();
+    auto _2 = conn.exec(INSERT);
+    auto _3 = tx.commit();
     ASSERT_EQ(1, conn.exec(SELECT).size());
 }
 
 TEST(TransactionTest, Rollback) {
     Connection conn{};
-    conn.exec(CREATE);
+    auto _ = conn.exec(CREATE);
     {
         auto tx = conn.begin();
-        conn.exec(INSERT);
+        auto _ = conn.exec(INSERT);
     }
     ASSERT_EQ(0, conn.exec(SELECT).size());
 }
@@ -45,16 +45,16 @@ TEST(TransactionTest, Rollback) {
 TEST(TransactionTest, Misuse) {
     Connection conn{};
     auto       tx = conn.begin();
-    tx.commit();
-    ASSERT_THROW(tx.commit(), LogicError);
+    auto _ = tx.commit();
+    ASSERT_THROW(auto _ = tx.commit(), LogicError);
 }
 
 TEST(TransactionTest, Move) {
     Connection conn{};
     auto       tx  = conn.begin();
     auto       tx2 = std::move(tx);
-    ASSERT_THROW(tx.commit(), LogicError);
-    tx2.commit();
+    ASSERT_THROW(auto _ = tx.commit(), LogicError);
+    auto _ = tx2.commit();
 }
 
 }  // namespace postgres

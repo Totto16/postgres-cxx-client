@@ -35,7 +35,7 @@ TEST(ChannelTest, Graceful) {
     std::vector<int> res{};
 
     for (auto i = 1; i <= 3; ++i) {
-        chan->send([&res, i](Connection&) {
+        auto _ = chan->send([&res, i](Connection&) {
             res.push_back(i);
         });
     }
@@ -54,7 +54,7 @@ TEST(ChannelTest, Drop) {
     std::vector<int> res{};
 
     for (auto i = 1; i <= 3; ++i) {
-        chan->send([&res, i](Connection&) {
+        auto _ = chan->send([&res, i](Connection&) {
             res.push_back(i);
         });
     }
@@ -95,8 +95,8 @@ TEST(ChannelTest, Timeout) {
 TEST(ChannelTest, Overflow) {
     auto const ctx  = Context::Builder{}.maxQueueSize(1).share();
     auto const chan = std::make_shared<Channel>(ctx);
-    chan->send(nullptr);
-    ASSERT_THROW(chan->send(nullptr), RuntimeError);
+    auto _ = chan->send(nullptr);
+    ASSERT_THROW(auto _ = chan->send(nullptr), RuntimeError);
 }
 
 }  // namespace postgres::internal

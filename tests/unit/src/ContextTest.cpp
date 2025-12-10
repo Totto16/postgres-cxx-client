@@ -40,22 +40,22 @@ TEST(ContextTest, Bad) {
 TEST(ContextTest, Connect) {
     ASSERT_TRUE(Context{}.connect().isOk());
     ASSERT_TRUE(Context::Builder{}.uri(CONNECT_URI).build().connect().isOk());
-    ASSERT_THROW(Context::Builder{}.uri("BAD").build().connect(), RuntimeError);
+    ASSERT_THROW(auto _ = Context::Builder{}.uri("BAD").build().connect(), RuntimeError);
 }
 
 TEST(ContextTest, Prepare) {
-    ASSERT_TRUE(Context::Builder{}.prepare(PrepareData{"select1", "SELECT 1"})
+    ASSERT_TRUE(Context::Builder{}.prepare(PrepareData{"select1", "SELECT 1",{}})
                                   .build()
                                   .connect()
                                   .exec(PreparedCommand{"select1"})
                                   .isOk());
-    ASSERT_THROW(Context::Builder{}.prepare(PrepareData{"bad", "BAD"}).build().connect(),
+    ASSERT_THROW(auto _ = Context::Builder{}.prepare(PrepareData{"bad", "BAD", {}}).build().connect(),
                  RuntimeError);
 }
 
 TEST(ContextTest, PrepareMulti) {
-    auto conn = Context::Builder{}.prepare(PrepareData{"select1", "SELECT 1"})
-                                  .prepare(PrepareData{"select2", "SELECT 2"})
+    auto conn = Context::Builder{}.prepare(PrepareData{"select1", "SELECT 1",{}})
+                                  .prepare(PrepareData{"select2", "SELECT 2",{}})
                                   .build()
                                   .connect();
     ASSERT_TRUE(conn.exec(PreparedCommand{"select1"}).isOk());

@@ -76,39 +76,39 @@ TEST(ConnectionTest, ConnectUri) {
 }
 
 TEST(ConnectionTest, ConnectBad) {
-    ASSERT_THROW(Connection{Config::Builder{}.port(2345).build()}, RuntimeError);
-    ASSERT_THROW(Connection{"port=2345"}, RuntimeError);
-    ASSERT_THROW(Connection{"postgresql://:2345"}, RuntimeError);
+    ASSERT_THROW(auto _ = Connection{Config::Builder{}.port(2345).build()}, RuntimeError);
+    ASSERT_THROW(auto _ = Connection{"port=2345"}, RuntimeError);
+    ASSERT_THROW(auto _ = Connection{"postgresql://:2345"}, RuntimeError);
 }
 
 TEST(ConnectionTest, Exec) {
     Connection conn{};
     ASSERT_TRUE(conn.exec("SELECT 1").isOk());
-    ASSERT_THROW(conn.exec("SELECT 1; SELECT 2"), RuntimeError);
-    ASSERT_THROW(conn.exec("BAD"), RuntimeError);
+    ASSERT_THROW(auto _ign = conn.exec("SELECT 1; SELECT 2"), RuntimeError);
+    ASSERT_THROW(auto _ign = conn.exec("BAD"), RuntimeError);
 }
 
 TEST(ConnectionTest, ExecRaw) {
     Connection conn{};
     ASSERT_TRUE(conn.execRaw("SELECT 1").isOk());
     ASSERT_TRUE(conn.execRaw("SELECT 1; SELECT 2").isOk());
-    ASSERT_THROW(conn.execRaw("BAD"), RuntimeError);
+    ASSERT_THROW(auto _ = conn.execRaw("BAD"), RuntimeError);
 }
 
 TEST(ConnectionTest, Prepare) {
     Connection conn{};
-    ASSERT_TRUE(conn.exec(PrepareData{"select1", "SELECT 1"}).isOk());
+    ASSERT_TRUE(conn.exec(PrepareData{"select1", "SELECT 1",{}}).isOk());
     ASSERT_TRUE(conn.exec(PreparedCommand{"select1"}).isOk());
-    ASSERT_THROW(conn.exec(PrepareData{"bad", "BAD"}), RuntimeError);
-    ASSERT_THROW(conn.exec(PreparedCommand{"bad"}), RuntimeError);
+    ASSERT_THROW(auto _ = conn.exec(PrepareData{"bad", "BAD",{}}), RuntimeError);
+    ASSERT_THROW(auto _ = conn.exec(PreparedCommand{"bad"}), RuntimeError);
 }
 
 TEST(ConnectionTest, PrepareArgs) {
     Connection conn{};
     ASSERT_TRUE(conn.exec(PrepareData{"select1", "SELECT $1", {INT4OID}}).isOk());
     ASSERT_TRUE(conn.exec(PreparedCommand{"select1", 1}).isOk());
-    ASSERT_TRUE(conn.exec(PrepareData{"bad", "SELECT $1"}).isOk());
-    ASSERT_THROW(conn.exec(PreparedCommand{"bad", 2}), RuntimeError);
+    ASSERT_TRUE(conn.exec(PrepareData{"bad", "SELECT $1",{}}).isOk());
+    ASSERT_THROW(auto _ = conn.exec(PreparedCommand{"bad", 2}), RuntimeError);
 }
 
 TEST(ConnectionTest, PrepareArgsEnumInsert) {
@@ -128,7 +128,7 @@ TEST(ConnectionTest, PrepareArgsEnumInsert) {
     ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl}).isOk());
 
     PreparedCommandEnumTestTable tbl2{TestEnum{"unknown_value"},{},2};
-    ASSERT_THROW(conn.exec(PreparedCommand{"enum_insert_1", tbl2}), RuntimeError);
+    ASSERT_THROW(auto _ = conn.exec(PreparedCommand{"enum_insert_1", tbl2}), RuntimeError);
 
     PreparedCommandEnumTestTable tbl3{TestEnum{"test1"},{},13};
     ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl3}).isOk());
@@ -152,7 +152,7 @@ TEST(ConnectionTest, EnumInsertNormal) {
     ASSERT_TRUE(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl}).isOk());
 
     CommandEnumTestTable tbl2{TestEnum2{"unknown_value"},{}};
-    ASSERT_THROW(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl2}), RuntimeError);
+    ASSERT_THROW(auto _ = conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl2}), RuntimeError);
 
     CommandEnumTestTable tbl3{TestEnum2{"test1"},{}};
     ASSERT_TRUE(conn.exec(Command{Statement<CommandEnumTestTable>::insert(), tbl3}).isOk());
@@ -182,38 +182,38 @@ TEST(ConnectionTest, StringVectorInsert) {
 TEST(ConnectionTest, ExecAsync) {
     Connection conn{};
     ASSERT_TRUE(conn.send("SELECT 1").receive().isOk());
-    ASSERT_THROW(conn.send("SELECT 1; SELECT 2").receive(), RuntimeError);
-    ASSERT_THROW(conn.send("BAD").receive(), RuntimeError);
+    ASSERT_THROW(auto _ =  conn.send("SELECT 1; SELECT 2").receive(), RuntimeError);
+    ASSERT_THROW(auto _ =  conn.send("BAD").receive(), RuntimeError);
 }
 
 TEST(ConnectionTest, ExecRawAsync) {
     Connection conn{};
     ASSERT_TRUE(conn.sendRaw("SELECT 1").consume().isOk());
     ASSERT_TRUE(conn.sendRaw("SELECT 1; SELECT 2").consume().isOk());
-    ASSERT_THROW(conn.sendRaw("BAD").consume(), RuntimeError);
+    ASSERT_THROW(auto _ =  conn.sendRaw("BAD").consume(), RuntimeError);
 }
 
 TEST(ConnectionTest, PrepareAsync) {
     Connection conn{};
-    ASSERT_TRUE(conn.send(PrepareData{"select1", "SELECT 1"}).receive().isOk());
+    ASSERT_TRUE(conn.send(PrepareData{"select1", "SELECT 1",{}}).receive().isOk());
     ASSERT_TRUE(conn.send(PreparedCommand{"select1"}).receive().isOk());
-    ASSERT_THROW(conn.send(PrepareData{"bad", "BAD"}).receive(), RuntimeError);
-    ASSERT_THROW(conn.send(PreparedCommand{"bad"}).receive(), RuntimeError);
+    ASSERT_THROW(auto _ =  conn.send(PrepareData{"bad", "BAD",{}}).receive(), RuntimeError);
+    ASSERT_THROW(auto _ =  conn.send(PreparedCommand{"bad"}).receive(), RuntimeError);
 }
 
 TEST(ConnectionTest, RowByRow) {
     Connection conn{};
     ASSERT_TRUE(conn.iter("SELECT 1").receive().isOk());
-    ASSERT_THROW(conn.iter("SELECT 1; SELECT 2").receive(), RuntimeError);
-    ASSERT_THROW(conn.iter("BAD").receive(), RuntimeError);
+    ASSERT_THROW(auto _ = conn.iter("SELECT 1; SELECT 2").receive(), RuntimeError);
+    ASSERT_THROW(auto _ = conn.iter("BAD").receive(), RuntimeError);
 }
 
 TEST(ConnectionTest, PrepareRowByRow) {
     Connection conn{};
-    ASSERT_TRUE(conn.exec(PrepareData{"select1", "SELECT 1"}).isOk());
+    ASSERT_TRUE(conn.exec(PrepareData{"select1", "SELECT 1",{}}).isOk());
     ASSERT_TRUE(conn.iter(PreparedCommand{"select1"}).receive().isOk());
-    ASSERT_THROW(conn.exec(PrepareData{"bad", "BAD"}), RuntimeError);
-    ASSERT_THROW(conn.iter(PreparedCommand{"bad"}).receive(), RuntimeError);
+    ASSERT_THROW(auto _ = conn.exec(PrepareData{"bad", "BAD",{}}), RuntimeError);
+    ASSERT_THROW(auto _ = conn.iter(PreparedCommand{"bad"}).receive(), RuntimeError);
 }
 
 TEST(ConnectionTest, Esc) {

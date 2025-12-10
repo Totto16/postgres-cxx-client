@@ -14,11 +14,11 @@ struct Table {
 
 struct TableTest : testing::Test {
     TableTest() {
-        conn_.create<Table>();
+        auto _ =  conn_.create<Table>();
     }
 
     ~TableTest() noexcept override {
-        conn_.drop<Table>();
+        auto _ =  conn_.drop<Table>();
     }
 
     Connection conn_;
