@@ -1,7 +1,7 @@
 project(
     'PostgresCxxClient',
     'cpp',
-    version: '1.0.5',
+    version: '1.0.6',
     license: 'MIT',
     meson_version: '>=1.2.0',
     default_options: {
