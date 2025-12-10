@@ -81,7 +81,7 @@ public:
     [[nodiscard]] std::enable_if_t<(1 < sizeof... (Ts)), Result> transact(Ts&& ... args) {
         auto tx  = begin();
         auto res = exec(std::forward<Ts>(args)...);
-        tx.commit();
+        auto _ign = tx.commit();
         return res;
     }
 

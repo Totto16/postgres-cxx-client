@@ -131,7 +131,7 @@ Receiver Connection::iter(PreparedCommand const& cmd) {
 }
 
 Transaction Connection::begin() {
-    exec("BEGIN");
+    auto _ign = exec("BEGIN");
     return Transaction{*this};
 }
 

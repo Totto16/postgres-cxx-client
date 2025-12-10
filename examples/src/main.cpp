@@ -56,7 +56,7 @@ void poolBehaviour();
 
 int main() {
     Connection conn{};
-    conn.exec("DROP TABLE IF EXISTS my_table");
+    auto _ign = conn.exec("DROP TABLE IF EXISTS my_table");
 
     getStarted();
     getStartedPool();
