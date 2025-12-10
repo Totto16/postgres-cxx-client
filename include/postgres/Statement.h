@@ -11,17 +11,17 @@ namespace postgres {
 
 template <typename T>
 struct Statement {
-    static std::string const& create() {
+    [[nodiscard]] static std::string const& create() {
         static auto const cache = "CREATE TABLE " + table() + " (" + typedFields() + ")";
         return cache;
     }
 
-    static std::string const& drop() {
+    [[nodiscard]] static std::string const& drop() {
         static auto const cache = "DROP TABLE " + table();
         return cache;
     }
 
-    static std::string const& insert() {
+    [[nodiscard]] static std::string const& insert() {
         static auto const cache = "INSERT INTO "
                                   + table()
                                   + " ("
@@ -32,35 +32,35 @@ struct Statement {
         return cache;
     }
 
-    static std::string const& update() {
+    [[nodiscard]] static std::string const& update() {
         static auto const cache = "UPDATE " + table() + " SET " + assignments();
         return cache;
     }
 
-    static std::string const& select() {
+    [[nodiscard]] static std::string const& select() {
         static auto const cache = "SELECT " + fields() + " FROM " + table();
         return cache;
     }
 
-    static std::string const& fields() {
+    [[nodiscard]] static std::string const& fields() {
         static auto const cache = collect(internal::FieldsCollector{});
         return cache;
     }
 
-    static std::string const& typedFields() {
+    [[nodiscard]] static std::string const& typedFields() {
         static auto const cache = collect(internal::TypedFieldsCollector{});
         return cache;
     }
 
-    static std::string placeholders(int const offset = 0) {
+    [[nodiscard]] static std::string placeholders(int const offset = 0) {
         return collect(internal::PlaceholdersCollector{offset});
     }
 
-    static std::string assignments(int const offset = 0) {
+    [[nodiscard]] static std::string assignments(int const offset = 0) {
         return collect(internal::AssignmentsCollector{offset});
     }
 
-    static std::string table() {
+    [[nodiscard]] static std::string table() {
         return T::_POSTGRES_CXX_TABLE_NAME;
     }
 
@@ -112,7 +112,7 @@ struct PreparedStatement {
         return collector.types;
     }
 
-    static std::string const& insert() {
+    [[nodiscard]] static std::string const& insert() {
 
     static auto const cache = "INSERT INTO "
                                   + Statement<T>::table()

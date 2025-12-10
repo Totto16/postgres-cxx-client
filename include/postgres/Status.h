@@ -15,17 +15,17 @@ public:
     Status& operator=(Status&& other) noexcept;
     ~Status() noexcept;
 
-    bool isOk() const;
-    bool isDone() const;
-    bool isEmpty() const;
+    [[nodiscard]] bool isOk() const;
+    [[nodiscard]] bool isDone() const;
+    [[nodiscard]] bool isEmpty() const;
 
-    int size() const;
-    int effect() const;
-    const char* message() const;
-    const char* describe() const;
-    ExecStatusType type() const;
+    [[nodiscard]] int size() const;
+    [[nodiscard]] int effect() const;
+    [[nodiscard]] const char* message() const;
+    [[nodiscard]] const char* describe() const;
+    [[nodiscard]] ExecStatusType type() const;
 
-    PGresult* native() const;
+    [[nodiscard]] PGresult* native() const;
 
 protected:
     friend class Connection;

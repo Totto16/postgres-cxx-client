@@ -29,11 +29,11 @@ public:
     Context& operator=(Context&& other) noexcept;
     ~Context() noexcept;
 
-    Connection connect() const;
-    Duration idleTimeout() const;
-    int maxConcurrency() const;
-    int maxQueueSize() const;
-    ShutdownPolicy shutdownPolicy() const;
+    [[nodiscard]] Connection connect() const;
+    [[nodiscard]] Duration idleTimeout() const;
+    [[nodiscard]] int maxConcurrency() const;
+    [[nodiscard]] int maxQueueSize() const;
+    [[nodiscard]] ShutdownPolicy shutdownPolicy() const;
 
 private:
     Config                   cfg_;

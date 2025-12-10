@@ -15,8 +15,8 @@ public:
     Consumer& operator=(Consumer&& other) noexcept;
     ~Consumer() noexcept;
 
-    Status consume();
-    bool isOk() const;
+    [[nodiscard]] Status consume();
+    [[nodiscard]] bool isOk() const;
     bool isBusy();
 
 protected:

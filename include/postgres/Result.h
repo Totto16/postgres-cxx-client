@@ -16,9 +16,9 @@ public:
     Result& operator=(Result&& other) noexcept;
     ~Result() noexcept;
 
-    iterator begin() const;
-    iterator end() const;
-    Row operator[](int idx) const;
+    [[nodiscard]] iterator begin() const;
+    [[nodiscard]] iterator end() const;
+    [[nodiscard]] Row operator[](int idx) const;
 
 private:
     friend class Connection;

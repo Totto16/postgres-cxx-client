@@ -20,11 +20,11 @@ public:
     Time& operator=(Time&& other) noexcept;
     ~Time() noexcept;
 
-    time_t toUnix() const;
-    time_t toPostgres() const;
-    std::string toString() const;
-    Point point() const;
-    bool hasZone() const;
+    [[nodiscard]] time_t toUnix() const;
+    [[nodiscard]] time_t toPostgres() const;
+    [[nodiscard]] std::string toString() const;
+    [[nodiscard]] Point point() const;
+    [[nodiscard]] bool hasZone() const;
 
     // 2000-01-01 00:00:00
     static auto constexpr EPOCH = Point{std::chrono::seconds{946684800}};

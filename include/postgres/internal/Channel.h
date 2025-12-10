@@ -24,7 +24,7 @@ public:
     Channel& operator=(Channel&& other) noexcept = delete;
     ~Channel() noexcept override;
 
-    std::tuple<bool, Worker*> send(Job job) override;
+    [[nodiscard]] std::tuple<bool, Worker*> send(Job job) override;
     void receive(Slot& slot) override;
     void recycle(Worker& worker) override;
     void drop() override;

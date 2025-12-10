@@ -15,9 +15,9 @@ public:
     Receiver& operator=(Receiver&& other) noexcept;
     ~Receiver() noexcept;
 
-    Result receive();
-    iterator begin();
-    iterator end();
+    [[nodiscard]] Result receive();
+    [[nodiscard]] iterator begin();
+    [[nodiscard]] iterator end();
 
 private:
     friend class Connection;

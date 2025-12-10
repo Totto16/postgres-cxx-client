@@ -33,11 +33,11 @@ public:
     Config& operator=(Config&& other) noexcept;
     ~Config() noexcept;
 
-    static Config build();
+    [[nodiscard]]static Config build();
 
     // libpq interface adapters.
-    char const* const* keys() const;
-    char const* const* values() const;
+    [[nodiscard]] char const* const* keys() const;
+    [[nodiscard]] char const* const* values() const;
 
 private:
     explicit Config();
@@ -92,7 +92,7 @@ public:
     Builder& setInterval(std::string const& key, Duration val);
     Builder& set(std::string const& key, std::string const& val);
 
-    Config build();
+    [[nodiscard]] Config build();
 
 private:
     Config cfg_;

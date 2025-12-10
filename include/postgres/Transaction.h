@@ -13,7 +13,7 @@ public:
     Transaction& operator=(Transaction&& other) = delete;
     ~Transaction() noexcept;
 
-    Result commit();
+    [[nodiscard]] Result commit();
 
 private:
     friend class Connection;

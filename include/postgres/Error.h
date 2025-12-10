@@ -15,7 +15,7 @@ public:
     Error& operator=(Error&& other) noexcept;
     ~Error() noexcept override;
 
-    char const* what() const noexcept override;
+    [[nodiscard]] char const* what() const noexcept override;
 
 private:
     std::string msg_;

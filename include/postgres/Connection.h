@@ -23,13 +23,14 @@ struct PrepareData;
 
 class Connection {
 public:
-    static PGPing ping();
-    static PGPing ping(Config const& cfg);
-    static PGPing ping(std::string const& uri);
+    [[nodiscard]] static PGPing ping();
+    [[nodiscard]] static PGPing ping(Config const& cfg);
+    [[nodiscard]] static PGPing ping(std::string const& uri);
+    
 
-    explicit Connection();
-    explicit Connection(Config const& cfg);
-    explicit Connection(std::string const& uri);
+    [[nodiscard]] explicit Connection();
+    [[nodiscard]] explicit Connection(Config const& cfg);
+    [[nodiscard]] explicit Connection(std::string const& uri);
     Connection(Connection const& other) = delete;
     Connection& operator=(Connection const& other) = delete;
     Connection(Connection&& other) noexcept;
@@ -37,32 +38,32 @@ public:
     ~Connection() noexcept;
 
     template <typename T>
-    Status create() {
+    [[nodiscard]] Status create() {
         return exec(Statement<T>::create());
     }
 
     template <typename T>
-    Status drop() {
+    [[nodiscard]] Status drop() {
         return exec(Statement<T>::drop());
     }
 
     template <typename T>
-    Status insert(T const& val) {
+    [[nodiscard]] Status insert(T const& val) {
         return exec(Command{Statement<T>::insert(), val});
     }
 
     template <typename Iter>
-    Status insert(Iter const it, Iter const end) {
+    [[nodiscard]] Status insert(Iter const it, Iter const end) {
         return exec(Command{RangeStatement::insert(it, end), std::make_pair(it, end)});
     }
 
     template <typename T>
-    Status update(T const& val) {
+    [[nodiscard]] Status update(T const& val) {
         return exec(Command{Statement<T>::update(), val});
     }
 
     template <typename T>
-    Result select(std::vector<T>& out) {
+    [[nodiscard]] Result select(std::vector<T>& out) {
         auto res = exec(Statement<T>::select());
         if (!res.isOk()) {
             return res;
@@ -77,36 +78,36 @@ public:
     }
 
     template <typename... Ts>
-    std::enable_if_t<(1 < sizeof... (Ts)), Result> transact(Ts&& ... args) {
+    [[nodiscard]] std::enable_if_t<(1 < sizeof... (Ts)), Result> transact(Ts&& ... args) {
         auto tx  = begin();
         auto res = exec(std::forward<Ts>(args)...);
         tx.commit();
         return res;
     }
 
-    Result exec(PrepareData const& prep);
-    Result exec(Command const& cmd);
-    Result exec(PreparedCommand const& cmd);
-    Status execRaw(std::string_view stmt);
+    [[nodiscard]] Result exec(PrepareData const& prep);
+    [[nodiscard]] Result exec(Command const& cmd);
+    [[nodiscard]] Result exec(PreparedCommand const& cmd);
+    [[nodiscard]] Status execRaw(std::string_view stmt);
 
-    Receiver send(PrepareData const& prep);
-    Receiver send(Command const& cmd);
-    Receiver send(PreparedCommand const& cmd);
-    Consumer sendRaw(std::string_view stmt);
+    [[nodiscard]] Receiver send(PrepareData const& prep);
+    [[nodiscard]] Receiver send(Command const& cmd);
+    [[nodiscard]] Receiver send(PreparedCommand const& cmd);
+    [[nodiscard]] Consumer sendRaw(std::string_view stmt);
 
-    Receiver iter(Command const& cmd);
-    Receiver iter(PreparedCommand const& cmd);
+    [[nodiscard]] Receiver iter(Command const& cmd);
+    [[nodiscard]] Receiver iter(PreparedCommand const& cmd);
 
-    Transaction begin();
+    [[nodiscard]] Transaction begin();
 
-    bool reset();
-    bool isOk();
-    std::string message();
+    [[nodiscard]] bool reset();
+    [[nodiscard]] bool isOk();
+    [[nodiscard]] std::string message();
 
-    std::string esc(std::string const& in);
-    std::string escId(std::string const& in);
+    [[nodiscard]] std::string esc(std::string const& in);
+    [[nodiscard]] std::string escId(std::string const& in);
 
-    PGconn* native() const;
+    [[nodiscard]] PGconn* native() const;
 
 private:
     explicit Connection(PGconn* handle);

@@ -48,12 +48,12 @@ public:
     };
 
     // libpq interface adapters.
-    char const* statement() const;
-    int count() const;
-    Oid const* types() const;
-    char const* const* values() const;
-    int const* lengths() const;
-    int const* formats() const;
+    [[nodiscard]] char const* statement() const;
+    [[nodiscard]] int count() const;
+    [[nodiscard]] Oid const* types() const;
+    [[nodiscard]] char const* const* values() const;
+    [[nodiscard]]int const* lengths() const;
+    [[nodiscard]] int const* formats() const;
 
 private:
     template <typename T, typename... Ts>
