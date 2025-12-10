@@ -1,9 +1,9 @@
 # PgCC (Postgres C++ Client)
 
-PgCC is a C++17 client library for working with PostgreSQL databases.
+PgCC is a C++20 client library for working with PostgreSQL databases.
 This library is a wrapper around libpq designed to make your work with Postgres easier. 
 Features:
-* C++17.
+* C++20.
 * Minimal dependencies.
 * Connection pool.
 * Asynchronous and row-by-row modes.
@@ -44,7 +44,7 @@ Features:
 
 Prerequisites:
 * CMake 3.8 or newer.
-* A C++17-compliant compiler.
+* A C++20-compliant compiler.
 * libpq-dev and postgresql-server-dev-all.
 * Google Test (only to run the tests).
 

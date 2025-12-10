@@ -658,13 +658,23 @@
 #endif
 
 
+#ifdef __clang__
+
+#define POSTGRES_IMPL_MACRO_PRAGMAS                                            \
+    _Pragma("GCC diagnostic ignored \"-Wvariadic-macros\"")                    \
+    _Pragma("GCC diagnostic ignored \"-Wvariadic-macro-arguments-omitted\"")
+#else
+#define POSTGRES_IMPL_MACRO_PRAGMAS                                            \
+    _Pragma("GCC diagnostic ignored \"-Wvariadic-macros\"")
+#endif
+
+
 #define POSTGRES_CXX_TABLE(name, ...) \
     static auto constexpr _POSTGRES_CXX_VISITABLE = true; \
     static auto constexpr _POSTGRES_CXX_TABLE_NAME = name; \
-    template <typename V> \
     _Pragma("GCC diagnostic push") \
-    _Pragma("GCC diagnostic ignored \"-Wvariadic-macros\"")\
-    _Pragma("GCC diagnostic ignored \"-Wvariadic-macro-arguments-omitted\"")\
+    POSTGRES_IMPL_MACRO_PRAGMAS \
+    template <typename V> \
     static void visitPostgresDefinition(V& visitor) { \
         _POSTGRES_CXX_VISIT(_POSTGRES_CXX_ACCEPT_DEF, __VA_ARGS__) \
     } \
