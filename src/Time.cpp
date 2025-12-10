@@ -51,14 +51,14 @@ Time::Time(std::string const& s) {
     auto       days     = std::stol(match[3].str());
     auto       hours    = std::stol(match[4].str());
     auto       minutes  = std::stol(match[5].str());
-    auto       seconds  = std::stol(match[6].str());
+    auto       seconds_  = std::stol(match[6].str());
     auto       fraction = match[7].str();
 
     _POSTGRES_CXX_ASSERT(LogicError, 1 <= months && months <= 12, "bad month in '" << s << "'");
     _POSTGRES_CXX_ASSERT(LogicError, 1 <= days && days <= 31, "bad month day in '" << s << "'");
     _POSTGRES_CXX_ASSERT(LogicError, 0 <= hours && hours <= 23, "bad hours in '" << s << "'");
     _POSTGRES_CXX_ASSERT(LogicError, 0 <= minutes && minutes <= 59, "bad minutes in '" << s << "'");
-    _POSTGRES_CXX_ASSERT(LogicError, 0 <= seconds && seconds <= 59, "bad seconds in '" << s << "'");
+    _POSTGRES_CXX_ASSERT(LogicError, 0 <= seconds_ && seconds_ <= 59, "bad seconds in '" << s << "'");
 
     for (auto y = years; y < 1970; ++y) {
         days -= isLeap(y) ? 366 : 365;
@@ -75,9 +75,9 @@ Time::Time(std::string const& s) {
     }
     hours += (days - 1) * 24;
     minutes += hours * 60;
-    seconds += minutes * 60;
+    seconds_ += minutes * 60;
 
-    pnt_ = Clock::from_time_t(seconds);
+    pnt_ = Clock::from_time_t(seconds_);
     if (!fraction.empty()) {
         fraction.resize(9, '0');
         auto const nanos = nanoseconds{std::stol(fraction)};
