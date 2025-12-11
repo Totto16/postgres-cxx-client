@@ -73,7 +73,9 @@ private:
 
   char const *type(std::string *) { return "TEXT"; }
 
-  char const *type(std::vector<std::string> *) { return "_text"; }
+  char const *type(std::vector<std::string> *) {
+    return PG_ARRAY_TYPE_STR("text");
+  }
 
   // TODO: support postgres::Time and TimestampWithTimeZone / TimestampZ
   char const *type(std::chrono::system_clock::time_point *) {

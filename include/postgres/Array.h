@@ -42,14 +42,16 @@ template <typename T>
 inline constexpr bool IsPostgresCXXArray =
     is_derived_from_template<postgres::Array, T>::value;
 
-#define PG_ARRAY_TYPE_INTERNAL_TEXT "_text"
+#define PG_ARRAY_TYPE_STR(Str) "_" Str
+
+#define PG_ARRAY_TYPE_INTERNAL_TEXT PG_ARRAY_TYPE_STR("text")
 
 #define OID_STORAGE_NAME_ARRAY(Name) _global_oid_storage_##Name##_Array
 
 #define POSTGRES_CXX_ARRAY(CXXName, PqlName, UnderlyingType)                   \
   static std::optional<Oid> OID_STORAGE_NAME_ARRAY(CXXName) = std::nullopt;    \
   struct CXXName final : postgres::Array<UnderlyingType> {                     \
-    static constexpr const char *name = "_" PqlName;                           \
+    static constexpr const char *name = PG_ARRAY_TYPE_STR(PqlName);            \
     static constexpr const char *underlying_name = PqlName;                    \
     static constexpr PgType pg_type = PgType::Array;                           \
                                                                                \
@@ -61,7 +63,7 @@ inline constexpr bool IsPostgresCXXArray =
     static void set_array_oid(Oid oid) {                                       \
       set_oid(&OID_STORAGE_NAME_ARRAY(CXXName), oid);                          \
     };                                                                         \
-    static void unset_array_oid() {                                             \
-      unset_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                              \
+    static void unset_array_oid() {                                            \
+      unset_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                             \
     };                                                                         \
   }
