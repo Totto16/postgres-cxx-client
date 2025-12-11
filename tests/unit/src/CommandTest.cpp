@@ -355,6 +355,31 @@ TEST(EnumCommandTest, Visit) {
   ASSERT_EQ(0, cmd.formats()[1]);
 }
 
+TEST(EnumCommandTest, Visit2) {
+
+  Oid enum_oid = 13003;
+  decltype(EnumCommandTestTable::e)::set_enum_oid(enum_oid);
+
+  Oid array_oid = 13004;
+  decltype(EnumCommandTestTable::vec)::set_array_oid(array_oid);
+
+  EnumCommandTestTable const tbl{
+      TestEnum{"test"}, TestEnumArray{TestEnum{"test1"}, TestEnum{"test2"}}};
+  Command const cmd{"STMT", tbl};
+  ASSERT_STREQ("STMT", cmd.statement());
+  ASSERT_EQ(2, cmd.count());
+
+  ASSERT_EQ(enum_oid, cmd.types()[0]);
+  ASSERT_EQ(tbl.e.value, cmd.values()[0]);
+  ASSERT_EQ(5, cmd.lengths()[0]);
+  ASSERT_EQ(0, cmd.formats()[0]);
+
+  ASSERT_EQ(array_oid, cmd.types()[1]);
+  ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
+  ASSERT_EQ(14, cmd.lengths()[1]);
+  ASSERT_EQ(0, cmd.formats()[1]);
+}
+
 TEST(CommandTest, MultiArgs) {
   Command const cmd{"STMT", std::string{"TEXT"}, int32_t{3}, 4.56};
   ASSERT_STREQ("STMT", cmd.statement());
