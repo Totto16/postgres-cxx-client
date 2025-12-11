@@ -10,6 +10,8 @@ namespace postgres {
 struct Enum : CustomType {
   pg_types::Text value;
 
+  Enum() : value{} {};
+
   Enum(pg_types::Text &&value) : value{std::move(value)} {};
   Enum(const pg_types::Text &value) : value{std::move(value)} {};
 };
@@ -32,6 +34,10 @@ concept IsPostgresCXXEnum = std::is_base_of_v<postgres::Enum, T>;
     static void set_enum_oid(Oid oid) {                                        \
       set_oid(&OID_STORAGE_NAME_ENUM(CXXName), oid);                           \
     };                                                                         \
+    static void unset_enum_oid() {                                             \
+      unset_oid(&OID_STORAGE_NAME_ENUM(CXXName));                              \
+    };                                                                         \
+    CXXName() : postgres::Enum{} {};                                           \
     CXXName(pg_types::Text &&value) : postgres::Enum{std::move(value)} {};     \
     CXXName(const pg_types::Text &value)                                       \
         : postgres::Enum{std::move(value)} {};                                 \

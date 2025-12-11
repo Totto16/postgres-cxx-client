@@ -339,7 +339,7 @@ TEST(CommandTest, Visit) {
 
 TEST(EnumCommandTest, Visit) {
   EnumCommandTestTable const tbl{
-      TestEnum{"test"}, TestEnumArray{TestEnum{"test1"}, TestEnum{"test2"}}};
+      TestEnum{"test"}, TestEnumArray{TestEnum{"test1"}, TestEnum{"test2"},TestEnum{}}};
   Command const cmd{"STMT", tbl};
   ASSERT_STREQ("STMT", cmd.statement());
   ASSERT_EQ(2, cmd.count());
@@ -350,8 +350,8 @@ TEST(EnumCommandTest, Visit) {
   ASSERT_EQ(0, cmd.formats()[0]);
 
   ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[1]);
-  ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
-  ASSERT_EQ(14, cmd.lengths()[1]);
+  ASSERT_STREQ("{test1,test2,}", cmd.values()[1]);
+  ASSERT_EQ(15, cmd.lengths()[1]);
   ASSERT_EQ(0, cmd.formats()[1]);
 }
 
@@ -377,6 +377,30 @@ TEST(EnumCommandTest, Visit2) {
   ASSERT_EQ(array_oid, cmd.types()[1]);
   ASSERT_STREQ("{test1,test2}", cmd.values()[1]);
   ASSERT_EQ(14, cmd.lengths()[1]);
+  ASSERT_EQ(0, cmd.formats()[1]);
+
+  // unset, for future tests
+  decltype(EnumCommandTestTable::e)::unset_enum_oid();
+
+  decltype(EnumCommandTestTable::vec)::unset_array_oid();
+
+}
+
+TEST(EnumCommandTest, Visit3) {
+  EnumCommandTestTable const tbl{
+      TestEnum{"test"}, TestEnumArray{}};
+  Command const cmd{"STMT", tbl};
+  ASSERT_STREQ("STMT", cmd.statement());
+  ASSERT_EQ(2, cmd.count());
+
+  ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[0]);
+  ASSERT_EQ(tbl.e.value, cmd.values()[0]);
+  ASSERT_EQ(5, cmd.lengths()[0]);
+  ASSERT_EQ(0, cmd.formats()[0]);
+
+  ASSERT_EQ(Oid{UNKNOWNOID}, cmd.types()[1]);
+  ASSERT_STREQ("{}", cmd.values()[1]);
+  ASSERT_EQ(3, cmd.lengths()[1]);
   ASSERT_EQ(0, cmd.formats()[1]);
 }
 

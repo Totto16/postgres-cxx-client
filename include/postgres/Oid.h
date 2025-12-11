@@ -222,6 +222,10 @@ struct CustomType {
   }
 
   static void set_oid(std::optional<Oid> *storage, Oid oid) { *storage = oid; };
+
+  static void unset_oid(std::optional<Oid> *storage) {
+    *storage = std::nullopt;
+  };
 };
 
 } // namespace postgres

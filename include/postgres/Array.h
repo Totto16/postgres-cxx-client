@@ -48,17 +48,20 @@ inline constexpr bool IsPostgresCXXArray =
 
 #define POSTGRES_CXX_ARRAY(CXXName, PqlName, UnderlyingType)                   \
   static std::optional<Oid> OID_STORAGE_NAME_ARRAY(CXXName) = std::nullopt;    \
-  struct CXXName final : postgres::Array<UnderlyingType> {                           \
+  struct CXXName final : postgres::Array<UnderlyingType> {                     \
     static constexpr const char *name = "_" PqlName;                           \
     static constexpr const char *underlying_name = PqlName;                    \
     static constexpr PgType pg_type = PgType::Array;                           \
                                                                                \
     CXXName(std::initializer_list<UnderlyingType> init)                        \
         : postgres::Array<UnderlyingType>{init} {};                            \
-    static Oid array_oid() {                                                    \
-      return get_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                         \
+    static Oid array_oid() {                                                   \
+      return get_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                        \
     };                                                                         \
-    static void set_array_oid(Oid oid) {                                        \
-      set_oid(&OID_STORAGE_NAME_ARRAY(CXXName), oid);                           \
+    static void set_array_oid(Oid oid) {                                       \
+      set_oid(&OID_STORAGE_NAME_ARRAY(CXXName), oid);                          \
+    };                                                                         \
+    static void unset_array_oid() {                                             \
+      unset_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                              \
     };                                                                         \
   }
