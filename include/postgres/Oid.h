@@ -1,7 +1,7 @@
 #pragma once
 
-#include <utility>
 #include <libpq-fe.h>
+#include <utility>
 
 // Taken from /usr/include/postgresql/18/server/catalog/pg_type_d.h
 
@@ -195,17 +195,33 @@
 #define INT8MULTIRANGEARRAYOID 6157
 #define CSTRINGARRAYOID 1263
 
+#include <optional>
+
 namespace postgres {
 
-template <typename T>
-struct OidBinding {
-    T         value;
-    Oid const type;
+template <typename T> struct OidBinding {
+  T value;
+  Oid const type;
 };
 
-template <typename T>
-OidBinding<T> bindOid(T&& param, Oid const type) {
-    return OidBinding<T>{std::forward<T>(param), type};
+template <typename T> OidBinding<T> bindOid(T &&param, Oid const type) {
+  return OidBinding<T>{std::forward<T>(param), type};
 }
 
-}  // namespace postgres
+struct CustomType {
+
+  static Oid get_oid(std::optional<Oid> *storage) {
+    if (storage == nullptr) {
+      return UNKNOWNOID;
+    }
+    if (!storage->has_value()) {
+      return UNKNOWNOID;
+    }
+
+    return storage->value();
+  }
+
+  static void set_oid(std::optional<Oid> *storage, Oid oid) { *storage = oid; };
+};
+
+} // namespace postgres

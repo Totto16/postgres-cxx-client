@@ -1,244 +1,219 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
-#include <optional>
 
 #include <postgres/Array.h>
-#include <postgres/Oid.h>
 #include <postgres/Enum.h>
+#include <postgres/Oid.h>
 
 namespace postgres::internal {
 
 struct FieldsCollector {
-    template <typename T>
-    void accept(char const* const name) {
-        if (!res.empty()) {
-            res += ",";
-        }
-        res += name;
+  template <typename T> void accept(char const *const name) {
+    if (!res.empty()) {
+      res += ",";
     }
+    res += name;
+  }
 
-    std::string res;
+  std::string res;
 };
 
 struct TypedFieldsCollector {
-    template <typename T>
-    void accept(char const* const name) {
-        if (!res.empty()) {
-            res += ",";
-        }
-        res += name;
-        res += " ";
-        res += type(static_cast<T*>(nullptr));
+  template <typename T> void accept(char const *const name) {
+    if (!res.empty()) {
+      res += ",";
     }
+    res += name;
+    res += " ";
+    res += type(static_cast<T *>(nullptr));
+  }
 
-    std::string res;
+  std::string res;
 
 private:
-    template <typename T>
-    std::enable_if_t<std::is_arithmetic_v<T>, char const*> type(T*) {
-        if (std::is_same_v<T, pg_types::Bool>) {
-            return "BOOL";
-        }
-
-        auto constexpr SIZE = sizeof(T);
-        if (std::is_floating_point_v<T>) {
-            if (SIZE <= 4) {
-                return "REAL";
-            }
-            return "DOUBLE PRECISION";
-        }
-
-        if (std::is_signed_v<T>) {
-            if (SIZE <= 2) {
-                return "SMALLINT";
-            }
-            if (SIZE <= 4) {
-                return "INT";
-            }
-            return "BIGINT";
-        }
-
-        //TODO: is this really how serial should work? yes it cant be signed, but it has also other effects
-        if (SIZE <= 2) {
-            return "SMALLSERIAL";
-        }
-        if (SIZE <= 4) {
-            return "SERIAL";
-        }
-        return "BIGSERIAL";
+  template <typename T>
+  std::enable_if_t<std::is_arithmetic_v<T>, char const *> type(T *) {
+    if (std::is_same_v<T, pg_types::Bool>) {
+      return "BOOL";
     }
 
-    char const* type(std::string*) {
-        return "TEXT";
+    auto constexpr SIZE = sizeof(T);
+    if (std::is_floating_point_v<T>) {
+      if (SIZE <= 4) {
+        return "REAL";
+      }
+      return "DOUBLE PRECISION";
     }
 
-    //TODO: support any type inside the vector!
-    char const* type(std::vector<std::string>*) {
-        return "TEXT[]";
+    if (std::is_signed_v<T>) {
+      if (SIZE <= 2) {
+        return "SMALLINT";
+      }
+      if (SIZE <= 4) {
+        return "INT";
+      }
+      return "BIGINT";
     }
 
-    // TODO: support postgres::Time and TimestampWithTimeZone / TimestampZ
-    char const* type(std::chrono::system_clock::time_point*) {
-        return "TIMESTAMP";
+    // TODO: is this really how serial should work? yes it cant be signed, but
+    // it has also other effects
+    if (SIZE <= 2) {
+      return "SMALLSERIAL";
     }
+    if (SIZE <= 4) {
+      return "SERIAL";
+    }
+    return "BIGSERIAL";
+  }
 
-    template <typename T>
-    std::enable_if_t<IsPostgresCXXEnum<T>, char const* > type(T*) {
-        return T::name;
-    }
+  char const *type(std::string *) { return "TEXT"; }
 
-    template <typename T>
-    std::enable_if_t<IsPostgresCXXArray<T>, char const* > type(T*) {
-        static auto const cache =  T::get_name();
-        return cache.c_str();
-    }
+  char const *type(std::vector<std::string> *) { return "_text"; }
+
+  // TODO: support postgres::Time and TimestampWithTimeZone / TimestampZ
+  char const *type(std::chrono::system_clock::time_point *) {
+    return "TIMESTAMP";
+  }
+
+  template <typename T>
+  std::enable_if_t<IsPostgresCXXEnum<T>, char const *> type(T *) {
+    return T::name;
+  }
+
+  template <typename T>
+  std::enable_if_t<IsPostgresCXXArray<T>, char const *> type(T *) {
+    static_assert((std::string{"_"} + T::underlying_name) == T::name,
+                  "array type needs to be in the form '_<type>'");
+    return T::name;
+  }
 };
 
-
 struct TypesCollector {
-   template <typename T> void accept(char const *const) {
+  template <typename T> void accept(char const *const) {
     types.push_back(oid_of(static_cast<T *>(nullptr)));
   }
 
   std::vector<Oid> types;
 
 private:
-    template <typename T>
-    std::enable_if_t<std::is_arithmetic_v<T>, Oid> oid_of(T*) {
-        if (std::is_same_v<T, bool>) {
-            return BOOLOID;
-        }
-
-        auto constexpr SIZE = sizeof(T);
-        if (std::is_floating_point_v<T>) {
-            if (SIZE <= 4) {
-                return FLOAT4OID;
-            }
-            return FLOAT8OID;
-        }
-
-        if (std::is_signed_v<T>) {
-            if (SIZE <= 2) {
-                return INT2OID;
-            }
-            if (SIZE <= 4) {
-                return INT4OID;
-            }
-            return INT8OID;
-        }
-
-        //TODO, fix this: as string we say serial, so this is broken atm xD
-        if (SIZE <= 2) {
-            return INT2OID;
-        }
-        if (SIZE <= 4) {
-            return INT4OID;
-        }
-        return INT8OID;
+  template <typename T>
+  std::enable_if_t<std::is_arithmetic_v<T>, Oid> oid_of(T *) {
+    if (std::is_same_v<T, bool>) {
+      return BOOLOID;
     }
 
-    Oid oid_of(std::string*) {
-        return TEXTOID;
+    auto constexpr SIZE = sizeof(T);
+    if (std::is_floating_point_v<T>) {
+      if (SIZE <= 4) {
+        return FLOAT4OID;
+      }
+      return FLOAT8OID;
     }
 
-    Oid oid_of(std::vector<std::string>*) {
-        return TEXTARRAYOID;
+    if (std::is_signed_v<T>) {
+      if (SIZE <= 2) {
+        return INT2OID;
+      }
+      if (SIZE <= 4) {
+        return INT4OID;
+      }
+      return INT8OID;
     }
 
-    Oid oid_of(std::chrono::system_clock::time_point*) {
-        return TIMESTAMPOID;
+    // TODO, fix this: as string we say serial, so this is broken atm xD
+    if (SIZE <= 2) {
+      return INT2OID;
     }
-
-    template<typename T> Oid oid_of(std::optional<T>*) {
-        return oid_of(static_cast<T *>(nullptr));
+    if (SIZE <= 4) {
+      return INT4OID;
     }
+    return INT8OID;
+  }
 
-    template <typename T>
-    std::enable_if_t<IsPostgresCXXEnum<T>,Oid> oid_of(T*) {
-        //TODO: add runtime mechanims, to detect this OID and return it here! T should generate a cached getter for this, that gets the id of it, or stores it statically somewhere, it shoudl return std::optional, and we use UNKNOWNOID when it is not known!
-        return UNKNOWNOID;
-    }
+  Oid oid_of(std::string *) { return TEXTOID; }
 
-    template <typename T>
-    std::enable_if_t<IsPostgresCXXArray<T>,Oid> oid_of(T*) {
-        //TODO, the same as the enum!
-        return UNKNOWNOID;
-    }
+  Oid oid_of(std::vector<std::string> *) { return TEXTARRAYOID; }
 
+  Oid oid_of(std::chrono::system_clock::time_point *) { return TIMESTAMPOID; }
+
+  template <typename T> Oid oid_of(std::optional<T> *) {
+    return oid_of(static_cast<T *>(nullptr));
+  }
+
+  template <typename T>
+  std::enable_if_t<IsPostgresCXXEnum<T>, Oid> oid_of(T *) {
+    return T::enum_oid();
+  }
+
+  template <typename T>
+  std::enable_if_t<IsPostgresCXXArray<T>, Oid> oid_of(T *) {
+    return T::array_oid();
+  }
 };
-
 
 struct PlaceholdersCollector {
-    template <typename T>
-    void accept(char const* const) {
-        res += res.empty() ? "$" : ",$";
-        res += std::to_string(++idx);
-    }
+  template <typename T> void accept(char const *const) {
+    res += res.empty() ? "$" : ",$";
+    res += std::to_string(++idx);
+  }
 
-    int         idx = 0;
-    std::string res{};
+  int idx = 0;
+  std::string res{};
 };
-
 
 struct CastedPlaceholdersCollector {
-    template <typename T>
-    void accept(char const* const) {
-        res += res.empty() ? "$" : ",$";
-        res += std::to_string(++idx);
+  template <typename T> void accept(char const *const) {
+    res += res.empty() ? "$" : ",$";
+    res += std::to_string(++idx);
 
-        auto [casting_type, is_array]  = needs_casting(static_cast<T*>(nullptr));
-        if(casting_type != nullptr){
-            res+="::";
-            res+= casting_type;
+    auto [casting_type, is_array] = needs_casting(static_cast<T *>(nullptr));
+    if (casting_type != nullptr) {
+      res += "::";
+      res += casting_type;
 
-            if(is_array){
-                res += "[]";
-            }
-        }
-
+      if (is_array) {
+        res += "[]";
+      }
     }
+  }
 
-    int         idx = 0;
-    std::string res{};
+  int idx = 0;
+  std::string res{};
 
 private:
-    template <typename T>
-    std::pair<const char*, bool> needs_casting(T*) {
-        if constexpr(IsPostgresCXXEnum<T>){
-            return {T::name, false};
-        }
-
-        return {nullptr, false};
+  template <typename T> std::pair<const char *, bool> needs_casting(T *) {
+    if constexpr (IsPostgresCXXEnum<T>) {
+      return {T::name, false};
     }
 
+    return {nullptr, false};
+  }
 
-    //TODO:
- /*    template <typename T>
-    std::enable_if_t<IsPostgresCXXEnum<T>, std::pair<const char*, bool>> needs_casting(std::vector<T>**) {
-        return {T::name, true};
-    }
- */
+  // TODO:
+  /*    template <typename T>
+     std::enable_if_t<IsPostgresCXXEnum<T>, std::pair<const char*, bool>>
+     needs_casting(std::vector<T>**) { return {T::name, true};
+     }
+  */
 };
-
-
 
 struct AssignmentsCollector {
-    template <typename T>
-    void accept(char const* const name) {
-        if (!res.empty()) {
-            res += ",";
-        }
-        res += name;
-        res += "=$";
-        res += std::to_string(++idx);
+  template <typename T> void accept(char const *const name) {
+    if (!res.empty()) {
+      res += ",";
     }
+    res += name;
+    res += "=$";
+    res += std::to_string(++idx);
+  }
 
-    int         idx = 0;
-    std::string res{};
+  int idx = 0;
+  std::string res{};
 };
 
-}  // namespace postgres::internal
+} // namespace postgres::internal

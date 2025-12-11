@@ -3,13 +3,16 @@
 #include <string>
 
 #include "./Types.h"
+#include <postgres/Oid.h>
 
 namespace postgres {
 
-template <typename T> struct Array {
+template <typename T> struct Array : CustomType {
   std::vector<T> values;
 
   using UnderlyingType = T;
+
+  Array() = default;
 
   Array(std::initializer_list<T> init) : values{init} {}
 };
@@ -39,18 +42,23 @@ template <typename T>
 inline constexpr bool IsPostgresCXXArray =
     is_derived_from_template<postgres::Array, T>::value;
 
-#define PG_ARRAY_TYPE_STR(Name) "_array_type_" Name "_generated_"
-
 #define PG_ARRAY_TYPE_INTERNAL_TEXT "_text"
 
-#define POSTGRES_CXX_ARRAY_OF_PG_TYPE(CXXName, Pql)                            \
-  POSTGRES_CXX_ARRAY(CXXName, Pql::name, Pql)
-
-
+#define OID_STORAGE_NAME_ARRAY(Name) _global_oid_storage_##Name##_Array
 
 #define POSTGRES_CXX_ARRAY(CXXName, PqlName, UnderlyingType)                   \
-  struct CXXName : postgres::Array<UnderlyingType> {                           \
-    static constexpr std::string get_name() {return std::string{} + PG_ARRAY_TYPE_STR( + PqlName + ); }      \
+  static std::optional<Oid> OID_STORAGE_NAME_ARRAY(CXXName) = std::nullopt;    \
+  struct CXXName final : postgres::Array<UnderlyingType> {                           \
+    static constexpr const char *name = "_" PqlName;                           \
     static constexpr const char *underlying_name = PqlName;                    \
     static constexpr PgType pg_type = PgType::Array;                           \
+                                                                               \
+    CXXName(std::initializer_list<UnderlyingType> init)                        \
+        : postgres::Array<UnderlyingType>{init} {};                            \
+    static Oid array_oid() {                                                    \
+      return get_oid(&OID_STORAGE_NAME_ARRAY(CXXName));                         \
+    };                                                                         \
+    static void set_array_oid(Oid oid) {                                        \
+      set_oid(&OID_STORAGE_NAME_ARRAY(CXXName), oid);                           \
+    };                                                                         \
   }

@@ -25,7 +25,7 @@ POSTGRES_CXX_ENUM(TestEnum2, "test_enum2");
 
 static_assert(IsPostgresCXXEnum<TestEnum2>, "TestEnum2 must be a postgres::Enum");
 
-POSTGRES_CXX_ARRAY_OF_PG_TYPE(TestEnum2Array, TestEnum2);
+POSTGRES_CXX_ARRAY(TestEnum2Array, "test_enum2", TestEnum2);
 
 static_assert(IsPostgresCXXArray<TestEnum2Array>, "TestEnum2Array must be a postgres::Array");
 

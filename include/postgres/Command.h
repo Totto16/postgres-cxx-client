@@ -100,8 +100,10 @@ private:
     std::enable_if_t<IsPostgresCXXEnum<T>> add(const T &arg) {
         const auto &value = arg.value;
         const  auto size = value.size() + 1;
-        //TODO. do the same as in Visitors.h for the enum and array types!
-        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
+
+        const auto oid = T::enum_oid();
+
+        setMeta(oid, static_cast<int>(size), 0);
 
         storeData(value.c_str(), size);
     }
@@ -128,10 +130,12 @@ private:
 
             result.at(result.size()-1) = '}';
         }
+
+        const auto oid = T::array_oid();
         
         const  auto size = result.size() + 1;
 
-        setMeta(UNKNOWNOID, static_cast<int>(size), 0);
+        setMeta(oid, static_cast<int>(size), 0);
 
         storeData(result.c_str(), size);
     }
