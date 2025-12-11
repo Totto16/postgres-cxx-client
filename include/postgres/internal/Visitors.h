@@ -6,6 +6,7 @@
 #include <vector>
 #include <optional>
 
+#include <postgres/Array.h>
 #include <postgres/Oid.h>
 #include <postgres/Enum.h>
 
@@ -86,13 +87,13 @@ private:
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, char const* > type(T*) {
+    std::enable_if_t<IsPostgresCXXEnum<T>, char const* > type(T*) {
         return T::name;
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, char const* > type(std::vector<T>*) {
-        static auto const cache = std::string{T::name} + "[]";
+    std::enable_if_t<IsPostgresCXXArray<T>, char const* > type(T*) {
+        static auto const cache =  T::get_name();
         return cache.c_str();
     }
 };
@@ -157,12 +158,14 @@ private:
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(T*) {
+    std::enable_if_t<IsPostgresCXXEnum<T>,Oid> oid_of(T*) {
+        //TODO: add runtime mechanims, to detect this OID and return it here! T should generate a cached getter for this, that gets the id of it, or stores it statically somewhere, it shoudl return std::optional, and we use UNKNOWNOID when it is not known!
         return UNKNOWNOID;
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>,Oid> oid_of(std::vector<T>*) {
+    std::enable_if_t<IsPostgresCXXArray<T>,Oid> oid_of(T*) {
+        //TODO, the same as the enum!
         return UNKNOWNOID;
     }
 
@@ -205,18 +208,20 @@ struct CastedPlaceholdersCollector {
 private:
     template <typename T>
     std::pair<const char*, bool> needs_casting(T*) {
-        if constexpr(std::is_base_of<postgres::Enum, T>::value){
+        if constexpr(IsPostgresCXXEnum<T>){
             return {T::name, false};
         }
 
         return {nullptr, false};
     }
 
-    template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>, std::pair<const char*, bool>> needs_casting(std::vector<T>**) {
+
+    //TODO:
+ /*    template <typename T>
+    std::enable_if_t<IsPostgresCXXEnum<T>, std::pair<const char*, bool>> needs_casting(std::vector<T>**) {
         return {T::name, true};
     }
-
+ */
 };
 
 

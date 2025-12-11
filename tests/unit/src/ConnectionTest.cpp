@@ -12,9 +12,17 @@
 
 POSTGRES_CXX_ENUM(TestEnum, "test_enum");
 
+static_assert(IsPostgresCXXEnum<TestEnum>, "TestEnum must be a postgres::Enum");
+
+POSTGRES_CXX_ARRAY_OF_PG_TYPE(TestEnumArray, TestEnum);
+
+static_assert(IsPostgresCXXArray<TestEnumArray>, "TestEnumArray must be a postgres::Array");
+
+static_assert(!IsPostgresCXXArray<TestEnum>, "TestEnum must NOT be a postgres::Array");
+
 struct PreparedCommandEnumTestTable {
     TestEnum e;
-    std::vector<TestEnum> vec;
+    TestEnumArray vec;
     int val;
 
     POSTGRES_CXX_TABLE("prepared_enum_cmd_test", e, vec, val);
@@ -23,9 +31,18 @@ struct PreparedCommandEnumTestTable {
 
 POSTGRES_CXX_ENUM(TestEnum2, "test_enum2");
 
+static_assert(IsPostgresCXXEnum<TestEnum2>, "TestEnum2 must be a postgres::Enum");
+
+POSTGRES_CXX_ARRAY_OF_PG_TYPE(TestEnum2Array, TestEnum2);
+
+static_assert(IsPostgresCXXArray<TestEnum2Array>, "TestEnum2Array must be a postgres::Array");
+
+static_assert(!IsPostgresCXXArray<TestEnum2>, "TestEnum2 must NOT be a postgres::Array");
+
+
 struct CommandEnumTestTable {
     TestEnum2 e;
-    std::vector<TestEnum2> vec;
+    TestEnum2Array vec;
 
     POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
 };
@@ -124,7 +141,7 @@ TEST(ConnectionTest, PrepareArgsEnumInsert) {
 
     ASSERT_TRUE(conn.exec(PrepareData{"enum_insert_1", PreparedStatement<PreparedCommandEnumTestTable>::insert(), PreparedStatement<PreparedCommandEnumTestTable>::types()}).isOk());
 
-    PreparedCommandEnumTestTable tbl{TestEnum{"test1"},{TestEnum{"test1"},TestEnum{"test2"}},21};
+    PreparedCommandEnumTestTable tbl{TestEnum{"test1"},TestEnumArray{TestEnum{"test1"},TestEnum{"test2"}},21};
     ASSERT_TRUE(conn.exec(PreparedCommand{"enum_insert_1", tbl}).isOk());
 
     PreparedCommandEnumTestTable tbl2{TestEnum{"unknown_value"},{},2};

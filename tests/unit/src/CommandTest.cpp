@@ -18,9 +18,19 @@ struct CommandTestTable {
 };
 
 POSTGRES_CXX_ENUM(TestEnum, "test_enum");
+
+static_assert(IsPostgresCXXEnum<TestEnum>, "TestEnum must be a postgres::Enum");
+
+POSTGRES_CXX_ARRAY_OF_PG_TYPE(TestEnumArray, TestEnum);
+
+static_assert(IsPostgresCXXArray<TestEnumArray>, "TestEnumArray must be a postgres::Array");
+
+static_assert(!IsPostgresCXXArray<TestEnum>, "TestEnum must NOT be a postgres::Array");
+
+
 struct EnumCommandTestTable {
     TestEnum e;
-    std::vector<TestEnum> vec;
+    TestEnumArray vec;
 
     POSTGRES_CXX_TABLE("enum_cmd_test", e, vec);
 };
@@ -327,7 +337,7 @@ TEST(CommandTest, Visit) {
 
 
 TEST(EnumCommandTest, Visit) {
-    EnumCommandTestTable const tbl{TestEnum{"test"}, {TestEnum{"test1"}, 
+    EnumCommandTestTable const tbl{TestEnum{"test"}, TestEnumArray{TestEnum{"test1"}, 
     TestEnum{"test2"}}};
     Command const          cmd{"STMT", tbl};
     ASSERT_STREQ("STMT", cmd.statement());

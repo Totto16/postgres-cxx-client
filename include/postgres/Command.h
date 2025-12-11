@@ -12,6 +12,7 @@
 #include <postgres/Oid.h>
 #include <postgres/Enum.h>
 #include <postgres/Time.h>
+#include <postgres/Array.h>
 
 namespace postgres {
 
@@ -96,23 +97,33 @@ private:
 
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const T &arg) {
+    std::enable_if_t<IsPostgresCXXEnum<T>> add(const T &arg) {
         const auto &value = arg.value;
         const  auto size = value.size() + 1;
+        //TODO. do the same as in Visitors.h for the enum and array types!
         setMeta(UNKNOWNOID, static_cast<int>(size), 0);
-
 
         storeData(value.c_str(), size);
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<postgres::Enum, T>> add(const std::vector<T> &args) {
+    std::enable_if_t<IsPostgresCXXEnum<T>,std::string> convert_to_string(const T &arg) {
+        return arg.value;
+    }
+
+    template <typename T>
+    std::string convert_to_string(const std::string &arg) {
+        return arg;
+    }
+
+    template <typename T>
+    std::enable_if_t<IsPostgresCXXArray<T>> add(const T &container) {
         std::string result = "{";
-        if(args.empty()){
+        if(container.values.empty()){
             result = "{}";
         }else{
-            for(const auto& arg : args){
-                result+= arg.value + ",";
+            for(const auto& arg : container.values){
+                result += convert_to_string(arg) + ",";
             }
 
             result.at(result.size()-1) = '}';

@@ -9,6 +9,7 @@
 enum class PgType {
   Enum,
   Table,
+  Array,
 };
 
 namespace pg_types {
@@ -78,5 +79,9 @@ using DoublePrecision = double;
 //  serial types
 
 // TODO
+
+// builtin vector types
+
+using TextArray = std::vector<std::string>;
 
 } // namespace pg_types

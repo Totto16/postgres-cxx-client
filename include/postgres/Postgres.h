@@ -1,5 +1,6 @@
 #pragma once
 
+#include <postgres/Array.h>
 #include <postgres/Client.h>
 #include <postgres/Command.h>
 #include <postgres/Config.h>

@@ -12,6 +12,9 @@ struct Enum {
 
 } // namespace postgres
 
+template <typename T>
+concept IsPostgresCXXEnum = std::is_base_of_v<postgres::Enum, T>;
+
 #define POSTGRES_CXX_ENUM(CXXName, PqlName)                                    \
   struct CXXName : postgres::Enum {                                            \
     static constexpr const char *name = PqlName;                               \

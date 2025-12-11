@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #define _POSTGRES_CXX_ACCEPT_DEF(arg) visitor.template accept<decltype(arg)>(#arg);
 #define _POSTGRES_CXX_ACCEPT_FLD(arg) visitor.accept(#arg, arg);
 
@@ -667,6 +669,16 @@
 #define POSTGRES_IMPL_MACRO_PRAGMAS                                            \
     _Pragma("GCC diagnostic ignored \"-Wvariadic-macros\"")
 #endif
+
+template <typename T>
+concept IsPostgresCXXVisitable = requires {
+    T::_POSTGRES_CXX_VISITABLE;
+} && std::is_convertible_v<decltype(T::_POSTGRES_CXX_VISITABLE), bool>;
+
+template <typename T>
+concept IsPostgresCXXTable =  IsPostgresCXXVisitable<T> && requires{
+    T::_POSTGRES_CXX_TABLE_NAME;
+} && std::is_convertible_v<decltype(T::_POSTGRES_CXX_TABLE_NAME), const char*>;
 
 
 #define POSTGRES_CXX_TABLE(name, ...) \

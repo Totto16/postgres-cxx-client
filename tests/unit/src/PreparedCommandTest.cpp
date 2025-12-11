@@ -23,9 +23,17 @@ struct PreparedCommandTestTable {
 
 POSTGRES_CXX_ENUM(TestEnum2, "test_enum2");
 
+static_assert(IsPostgresCXXEnum<TestEnum2>, "TestEnum2 must be a postgres::Enum");
+
+POSTGRES_CXX_ARRAY_OF_PG_TYPE(TestEnum2Array, TestEnum2);
+
+static_assert(IsPostgresCXXArray<TestEnum2Array>, "TestEnum2Array must be a postgres::Array");
+
+static_assert(!IsPostgresCXXArray<TestEnum2>, "TestEnum2 must NOT be a postgres::Array");
+
 struct PreparedCommandEnumTestTable {
     TestEnum2 e;
-    std::vector<TestEnum2> vec;
+    TestEnum2Array vec;
 
     POSTGRES_CXX_TABLE("prepared_enum_cmd_test", e,vec);
 };
