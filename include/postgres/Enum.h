@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include "./Types.h"
+
 namespace postgres {
 
 struct Enum {
-  std::string value;
+  pg_types::Text value;
 };
 
 } // namespace postgres
@@ -13,4 +15,5 @@ struct Enum {
 #define POSTGRES_CXX_ENUM(CXXName, PqlName)                                    \
   struct CXXName : postgres::Enum {                                            \
     static constexpr const char *name = PqlName;                               \
+    static constexpr PgType pg_type = PgType::Enum;                            \
   }

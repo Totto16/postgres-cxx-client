@@ -672,6 +672,7 @@
 #define POSTGRES_CXX_TABLE(name, ...) \
     static auto constexpr _POSTGRES_CXX_VISITABLE = true; \
     static auto constexpr _POSTGRES_CXX_TABLE_NAME = name; \
+    static constexpr PgType pg_type = PgType::Table;                            \
     _Pragma("GCC diagnostic push") \
     POSTGRES_IMPL_MACRO_PRAGMAS \
     template <typename V> \

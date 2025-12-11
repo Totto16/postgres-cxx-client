@@ -39,7 +39,7 @@ struct TypedFieldsCollector {
 private:
     template <typename T>
     std::enable_if_t<std::is_arithmetic_v<T>, char const*> type(T*) {
-        if (std::is_same_v<T, bool>) {
+        if (std::is_same_v<T, pg_types::Bool>) {
             return "BOOL";
         }
 
@@ -61,6 +61,7 @@ private:
             return "BIGINT";
         }
 
+        //TODO: is this really how serial should work? yes it cant be signed, but it has also other effects
         if (SIZE <= 2) {
             return "SMALLSERIAL";
         }
@@ -74,10 +75,12 @@ private:
         return "TEXT";
     }
 
+    //TODO: support any type inside the vector!
     char const* type(std::vector<std::string>*) {
         return "TEXT[]";
     }
 
+    // TODO: support postgres::Time and TimestampWithTimeZone / TimestampZ
     char const* type(std::chrono::system_clock::time_point*) {
         return "TIMESTAMP";
     }
@@ -127,6 +130,7 @@ private:
             return INT8OID;
         }
 
+        //TODO, fix this: as string we say serial, so this is broken atm xD
         if (SIZE <= 2) {
             return INT2OID;
         }

@@ -19,4 +19,5 @@
 #include <postgres/Status.h>
 #include <postgres/Time.h>
 #include <postgres/Transaction.h>
+#include <postgres/Types.h>
 #include <postgres/Visitable.h>
